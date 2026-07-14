@@ -1,0 +1,50 @@
+<header class="topbar">
+  <div class="brand">
+    <span class="mark">NC</span>
+    <div>
+      <div class="title">HOV Dashboard</div>
+      @if (accountId(); as acct) {
+        <div class="acct">Account {{ acct }}</div>
+      }
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <label class="range">
+      <span>Range</span>
+      <select [ngModel]="days()" (ngModelChange)="changeDays($event)" [disabled]="loading()">
+        @for (d of dayOptions; track d) {
+          <option [ngValue]="d">Last {{ d }} days</option>
+        }
+      </select>
+    </label>
+    <button class="btn-ghost" (click)="loadAll()" [disabled]="loading()">Refresh</button>
+    <button class="btn-ghost" (click)="logout()">Sign out</button>
+  </div>
+</header>
+
+<main class="content">
+  @if (actionMessage(); as msg) {
+    <div class="toast">{{ msg }}</div>
+  }
+
+  @if (error(); as err) {
+    <div class="alert" role="alert">
+      {{ err }}
+      <button class="btn-ghost" (click)="loadAll()">Retry</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading">Loading…</div>
+  } @else if (!error()) {
+    <app-hov-status
+      [vehicles]="vehicles()"
+      [declarations]="declarations()"
+      [busyTransponder]="busyTransponder()"
+      (activate)="onActivate($event)"
+      (cancel)="onCancel($event)"
+    />
+
+    <app-trip-list [trips]="trips()" />
+  }
+</main>

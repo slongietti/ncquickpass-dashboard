@@ -1,0 +1,43 @@
+<div class="login-wrap">
+  <form class="login-card" (ngSubmit)="submit()">
+    <h1>NC Quick Pass</h1>
+    <p class="subtitle">HOV Dashboard</p>
+
+    @if (error(); as err) {
+      <div class="alert" role="alert">{{ err }}</div>
+    }
+
+    <label>
+      <span>Username</span>
+      <input
+        name="username"
+        type="text"
+        autocomplete="username"
+        [(ngModel)]="username"
+        [disabled]="loading()"
+        required
+      />
+    </label>
+
+    <label>
+      <span>Password</span>
+      <input
+        name="password"
+        type="password"
+        autocomplete="current-password"
+        [(ngModel)]="password"
+        [disabled]="loading()"
+        required
+      />
+    </label>
+
+    <button type="submit" [disabled]="loading() || !username || !password">
+      {{ loading() ? 'Signing in…' : 'Sign in' }}
+    </button>
+
+    <p class="fineprint">
+      Your credentials are sent once to the local backend and used only to obtain a session
+      token. They are never stored.
+    </p>
+  </form>
+</div>

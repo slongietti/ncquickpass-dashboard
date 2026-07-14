@@ -55,6 +55,30 @@ npm start
 
 Then open http://localhost:4200 and log in with your NC Quick Pass credentials.
 
+## Running with Docker
+
+The whole stack ships as two containers. The frontend's nginx serves the built SPA
+**and** reverse-proxies `/api` to the BFF, so the browser talks to a single origin
+(the HttpOnly cookie stays same-site and there's no CORS to configure).
+
+```bash
+docker compose up --build
+# open http://localhost:8080
+```
+
+Only the `web` container is published (`:8080`); the BFF is reachable only on the
+internal compose network. For anything beyond local use, set a strong cookie secret
+(and enable Secure cookies behind HTTPS):
+
+```bash
+COOKIE_SECRET=$(openssl rand -hex 32) COOKIE_SECURE=true docker compose up --build
+```
+
+| Service | Image base    | Role                                              |
+| ------- | ------------- | ------------------------------------------------- |
+| `web`   | `nginx`       | Serves the Angular SPA + proxies `/api` → `bff`   |
+| `bff`   | `node`        | NestJS backend-for-frontend (not published)       |
+
 ## Project layout
 
 | Path        | What it is                                              |

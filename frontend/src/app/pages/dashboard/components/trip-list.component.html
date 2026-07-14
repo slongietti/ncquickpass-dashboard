@@ -1,0 +1,50 @@
+<section class="card">
+  <header class="card-head">
+    <h2>I-77 HOV Trips</h2>
+    <p class="hint">
+      Express Lanes tolls grouped into trips (tolls within 5 minutes of each other).
+    </p>
+  </header>
+
+  @if (trips.length === 0) {
+    <p class="empty">No I-77 Express Lanes tolls in this range.</p>
+  }
+
+  <ul class="trips">
+    @for (trip of trips; track $index) {
+      <li class="trip" [class.open]="isExpanded($index)">
+        <button class="trip-head" (click)="toggle($index)" [attr.aria-expanded]="isExpanded($index)">
+          <span class="chevron" aria-hidden="true">{{ isExpanded($index) ? '▾' : '▸' }}</span>
+          <span class="trip-when">
+            @if (spansSingleDay(trip)) {
+              <span class="date">{{ trip.start | date: 'EEE, MMM d' }}</span>
+              <span class="time">
+                {{ trip.start | date: 'h:mm a' }} – {{ trip.end | date: 'h:mm a' }}
+              </span>
+            } @else {
+              <span class="date">
+                {{ trip.start | date: 'MMM d, h:mm a' }} – {{ trip.end | date: 'MMM d, h:mm a' }}
+              </span>
+            }
+          </span>
+          <span class="trip-summary">
+            <span class="count">{{ trip.transactions.length }} toll{{ trip.transactions.length === 1 ? '' : 's' }}</span>
+            <span class="total">{{ trip.total | currency }}</span>
+          </span>
+        </button>
+
+        @if (isExpanded($index)) {
+          <ul class="tolls">
+            @for (t of trip.transactions; track $index) {
+              <li class="toll">
+                <span class="toll-loc">{{ t.exitLocation }}</span>
+                <span class="toll-time">{{ t.transactionDate | date: 'h:mm a' }}</span>
+                <span class="toll-amt">{{ t.debitAmount | currency }}</span>
+              </li>
+            }
+          </ul>
+        }
+      </li>
+    }
+  </ul>
+</section>

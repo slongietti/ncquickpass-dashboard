@@ -1,0 +1,64 @@
+<section class="card">
+  <header class="card-head">
+    <h2>HOV Status</h2>
+    <p class="hint">Set a custom end time to declare HOV on I-77, or cancel an active declaration.</p>
+  </header>
+
+  @if (vehicles.length === 0) {
+    <p class="empty">No transponders found on this account.</p>
+  }
+
+  <ul class="vehicles">
+    @for (v of vehicles; track v.transponderNumber) {
+      <li class="vehicle">
+        <div class="vehicle-info">
+          <div class="vehicle-name">{{ v.friendlyName || 'Transponder' }}</div>
+          <div class="vehicle-meta">
+            <span>{{ v.description || '—' }}</span>
+            <span class="tag">#{{ v.transponderNumber }}</span>
+          </div>
+        </div>
+
+        @if (declarationFor(v.transponderNumber); as decl) {
+          <div class="status">
+            <span class="badge badge-active">{{ decl.status }}</span>
+            @if (decl.endDateTime) {
+              <span class="until">until {{ decl.endDateTime | date: 'MMM d, h:mm a' }}</span>
+            }
+          </div>
+        } @else {
+          <div class="status">
+            <span class="badge badge-idle">No active HOV</span>
+          </div>
+        }
+
+        <div class="actions">
+          <label class="end-picker">
+            <span>End</span>
+            <input
+              type="datetime-local"
+              [(ngModel)]="endInputs[v.transponderNumber]"
+              [disabled]="busyTransponder === v.transponderNumber"
+            />
+          </label>
+          <button
+            class="btn-primary"
+            (click)="onSetEnd(v.transponderNumber)"
+            [disabled]="busyTransponder === v.transponderNumber"
+          >
+            Set HOV end
+          </button>
+          @if (declarationFor(v.transponderNumber); as decl) {
+            <button
+              class="btn-danger"
+              (click)="onCancel(decl.declarationId)"
+              [disabled]="busyTransponder === v.transponderNumber"
+            >
+              Cancel
+            </button>
+          }
+        </div>
+      </li>
+    }
+  </ul>
+</section>
