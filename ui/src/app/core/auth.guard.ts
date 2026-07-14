@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { map, catchError, of } from 'rxjs';
-import { AuthService } from './auth.service';
+import { AuthService } from './services/auth.service';
 
 /** Allows the route only if the server confirms an active session. */
 export const authGuard: CanActivateFn = () => {

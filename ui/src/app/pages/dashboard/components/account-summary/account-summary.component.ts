@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { TransactionView } from '../../../core/models';
+import { TransactionView } from '../../../../core/models';
 
 @Component({
   selector: 'app-account-summary',

@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { Trip } from '../../../core/models';
-import { SelectComponent, SelectOption } from '../../../shared/select.component';
+import { Trip } from '../../../../core/models';
+import { SelectComponent, SelectOption } from '../../../../shared/select/select.component';
 
 export interface RangeOption {
   label: string;

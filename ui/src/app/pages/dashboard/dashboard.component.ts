@@ -3,15 +3,15 @@ import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
 
-import { AuthService } from '../../core/auth.service';
-import { HovService } from '../../core/hov.service';
-import { TransactionService } from '../../core/transaction.service';
-import { AccountService } from '../../core/account.service';
+import { AuthService } from '../../core/services/auth.service';
+import { HovService } from '../../core/services/hov.service';
+import { TransactionService } from '../../core/services/transaction.service';
+import { AccountService } from '../../core/services/account.service';
 import { AccountSummary, DeclarationView, TransactionView, VehicleView } from '../../core/models';
 import { groupIntoTrips, replenishments } from '../../core/trip-grouping';
-import { ActivateRequest, HovStatusComponent } from './components/hov-status.component';
-import { TripListComponent } from './components/trip-list.component';
-import { AccountSummaryComponent } from './components/account-summary.component';
+import { ActivateRequest, HovStatusComponent } from './components/hov-status/hov-status.component';
+import { TripListComponent } from './components/trip-list/trip-list.component';
+import { AccountSummaryComponent } from './components/account-summary/account-summary.component';
 
 export interface RangeOption {
   label: string;

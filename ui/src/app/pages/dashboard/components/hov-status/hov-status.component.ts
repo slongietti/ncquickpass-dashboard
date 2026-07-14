@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { DeclarationView, VehicleView } from '../../../core/models';
-import { DateTimePickerDirective } from '../../../core/date-time-picker.directive';
+import { DeclarationView, VehicleView } from '../../../../core/models';
+import { DateTimePickerDirective } from '../../../../core/date-time-picker.directive';
 
 export interface ActivateRequest {
   transponderNumber: string;

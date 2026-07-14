@@ -1,0 +1,29 @@
+<div class="select" [class.open]="open" [class.disabled]="disabled">
+  <button
+    type="button"
+    class="trigger"
+    (click)="toggle()"
+    [disabled]="disabled"
+    [attr.aria-expanded]="open"
+  >
+    <span class="label">{{ selectedLabel }}</span>
+    <span class="caret" aria-hidden="true">▾</span>
+  </button>
+  @if (open) {
+    <ul class="menu" role="listbox">
+      @for (o of options; track o.value) {
+        <li
+          role="option"
+          [attr.aria-selected]="o.value === value"
+          [class.selected]="o.value === value"
+          (click)="choose(o.value)"
+        >
+          <span>{{ o.label }}</span>
+          @if (o.value === value) {
+            <span class="check" aria-hidden="true">✓</span>
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>

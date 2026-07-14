@@ -33,6 +33,16 @@ export class NcqpService {
       timeout: 20000,
     });
     this.clientId = this.config.get<string>('NCQP_CLIENT_ID', 'AMSExternalngAuthApp');
+
+    // TEMP DIAGNOSTIC: log which NCQP responses set cookies (names only).
+    this.http.interceptors.response.use((resp) => {
+      const sc = resp.headers?.['set-cookie'] as string[] | undefined;
+      if (sc?.length) {
+        const names = sc.map((c) => c.split('=')[0]).join(',');
+        this.logger.warn(`set-cookie on ${resp.config.url}: ${names}`);
+      }
+      return resp;
+    });
   }
 
   private authHeaders(token: string): Record<string, string> {
@@ -146,6 +156,8 @@ export class NcqpService {
     try {
       const resp = await fetch(url, {
         method: 'PUT',
+        // Empty byte body forces `Content-Length: 0` with no Content-Type.
+        body: new Uint8Array(0),
         headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
       });
       const text = await resp.text();
