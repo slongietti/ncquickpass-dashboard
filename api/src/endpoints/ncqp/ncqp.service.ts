@@ -14,7 +14,7 @@ import {
   NcqpTokenResponse,
   NcqpTransaction,
   NcqpVehicleTag,
-} from './ncqp.types';
+} from '../../models/ncqp/ncqp.types';
 
 /**
  * Server-to-server client for the NC Quick Pass API. All calls run from the

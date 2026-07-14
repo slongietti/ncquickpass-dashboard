@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Post, Put, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '../auth/auth.guard';
-import { CurrentSession } from '../auth/current-session.decorator';
-import type { NcqpSession } from '../auth/session';
-import { ActivateDto } from './dto/activate.dto';
-import { CancelDto } from './dto/cancel.dto';
+import { AuthGuard } from '../auth/session/auth.guard';
+import { CurrentSession } from '../auth/session/current-session.decorator';
+import type { NcqpSession } from '../auth/session/session';
+import { ActivateDto } from '../../models/hov/activate.dto';
+import { CancelDto } from '../../models/hov/cancel.dto';
 import { DeclarationView, HovService, VehicleView } from './hov.service';
 
 @Controller('hov')

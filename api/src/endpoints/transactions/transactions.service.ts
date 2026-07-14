@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { NcqpService } from '../ncqp/ncqp.service';
-import { NcqpTransaction } from '../ncqp/ncqp.types';
-import { NcqpSession } from '../auth/session';
+import { NcqpTransaction } from '../../models/ncqp/ncqp.types';
+import { NcqpSession } from '../auth/session/session';
 
 /** Slim transaction shape returned to the SPA. */
 export interface TransactionView {

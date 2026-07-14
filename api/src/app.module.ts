@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { NcqpModule } from './ncqp/ncqp.module';
-import { AuthModule } from './auth/auth.module';
-import { AccountModule } from './account/account.module';
-import { HovModule } from './hov/hov.module';
-import { TransactionsModule } from './transactions/transactions.module';
+import { NcqpModule } from './endpoints/ncqp/ncqp.module';
+import { AuthModule } from './endpoints/auth/auth.module';
+import { AccountModule } from './endpoints/account/account.module';
+import { HovModule } from './endpoints/hov/hov.module';
+import { TransactionsModule } from './endpoints/transactions/transactions.module';
 import { HealthController } from './health.controller';
 
 @Module({

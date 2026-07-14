@@ -1,7 +1,7 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { NcqpService } from '../ncqp/ncqp.service';
-import { NcqpUserInfo } from '../ncqp/ncqp.types';
-import { NcqpSession } from './session';
+import { NcqpUserInfo } from '../../models/ncqp/ncqp.types';
+import { NcqpSession } from './session/session';
 
 function fmtDate(d: Date): string {
   const pad = (n: number) => String(n).padStart(2, '0');

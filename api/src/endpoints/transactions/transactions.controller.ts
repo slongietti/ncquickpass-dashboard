@@ -1,7 +1,7 @@
 import { Controller, DefaultValuePipe, Get, ParseIntPipe, Query, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '../auth/auth.guard';
-import { CurrentSession } from '../auth/current-session.decorator';
-import type { NcqpSession } from '../auth/session';
+import { AuthGuard } from '../auth/session/auth.guard';
+import { CurrentSession } from '../auth/session/current-session.decorator';
+import type { NcqpSession } from '../auth/session/session';
 import { TransactionView, TransactionsService } from './transactions.service';
 
 @Controller('transactions')

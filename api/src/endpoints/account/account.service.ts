@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { NcqpService } from '../ncqp/ncqp.service';
-import { NcqpSession } from '../auth/session';
+import { NcqpSession } from '../auth/session/session';
 
 export interface AccountSummary {
   accountNumber: string;
