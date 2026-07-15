@@ -33,16 +33,6 @@ export class NcqpService {
       timeout: 20000,
     });
     this.clientId = this.config.get<string>('NCQP_CLIENT_ID', 'AMSExternalngAuthApp');
-
-    // TEMP DIAGNOSTIC: log which NCQP responses set cookies (names only).
-    this.http.interceptors.response.use((resp) => {
-      const sc = resp.headers?.['set-cookie'] as string[] | undefined;
-      if (sc?.length) {
-        const names = sc.map((c) => c.split('=')[0]).join(',');
-        this.logger.warn(`set-cookie on ${resp.config.url}: ${names}`);
-      }
-      return resp;
-    });
   }
 
   private authHeaders(token: string): Record<string, string> {
@@ -145,9 +135,19 @@ export class NcqpService {
 
   /**
    * Cancel an HOV declaration. Response body is the bare string "Canceled".
-   * Uses native fetch (not axios) so the bodyless PUT carries NO Content-Type —
-   * axios forces `application/x-www-form-urlencoded`, which makes NCQP 500.
+   *
+   * NCQP's cancellation endpoint rejects non-browser clients: Node's `fetch`
+   * defaults to `User-Agent: node`, which the upstream WAF/handler answers with
+   * an empty 500. Sending a browser User-Agent (as the real site does) returns
+   * 200. We authenticate the same way the browser does for this call — the JWT
+   * in the `_tz` cookie plus a matching Origin/Referer — and use native fetch so
+   * the bodyless PUT carries `Content-Length: 0` and no Content-Type (axios
+   * forces `application/x-www-form-urlencoded`).
    */
+  private static readonly BROWSER_UA =
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
+    '(KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36';
+
   async cancelHov(token: string, declarationId: string, userId: string): Promise<string> {
     const base = this.config.get<string>('NCQP_BASE_URL', 'https://secure.ncquickpass.com');
     const url =
@@ -158,7 +158,13 @@ export class NcqpService {
         method: 'PUT',
         // Empty byte body forces `Content-Length: 0` with no Content-Type.
         body: new Uint8Array(0),
-        headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': NcqpService.BROWSER_UA,
+          Cookie: `_tz=${token}`,
+          Origin: base,
+          Referer: `${base}/`,
+        },
       });
       const text = await resp.text();
       if (!resp.ok) {
