@@ -1,0 +1,47 @@
+<div class="login-wrap">
+  <form class="login-card" (ngSubmit)="submit()">
+    <img class="login-logo" src="assets/ncta-logo.svg" alt="NC Quick Pass" />
+    <p class="subtitle">Dashboard</p>
+
+    @if (error(); as err) {
+      <div class="alert" role="alert">{{ err }}</div>
+    }
+
+    <label>
+      <span>Username</span>
+      <input
+        name="username"
+        type="text"
+        autocomplete="username"
+        [(ngModel)]="username"
+        [disabled]="loading()"
+        required
+      />
+    </label>
+
+    <label>
+      <span>Password</span>
+      <input
+        name="password"
+        type="password"
+        autocomplete="current-password"
+        [(ngModel)]="password"
+        [disabled]="loading()"
+        required
+      />
+    </label>
+
+    <button type="submit" [disabled]="loading() || !username || !password">
+      {{ loading() ? 'Signing in…' : 'Sign in' }}
+    </button>
+
+    <p class="fineprint">
+      Your credentials are never saved. They are utilized by the backend to proxy api calls to
+      ncquickpass.com on your behalf.
+    </p>
+
+    <p class="built-by">
+      Powered by <img class="volare-inline" src="assets/volare-logo.png" alt="Volare" />
+    </p>
+  </form>
+</div>

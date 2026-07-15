@@ -10,11 +10,16 @@ from a single page.
 
 ## Architecture
 
-```
-┌──────────────────┐   same-origin /api    ┌──────────────────┐   Bearer JWT    ┌──────────────────┐
-│  Angular 17 SPA  │ ────────────────────► │   NestJS BFF     │ ──────────────► │  NC Quick Pass   │
-│  (frontend/)     │ ◄──────────────────── │   (backend/)     │ ◄────────────── │  secure.ncquick… │
-└──────────────────┘   HttpOnly cookie      └──────────────────┘                 └──────────────────┘
+```mermaid
+flowchart LR
+    SPA["Angular 17 SPA<br/>(ui/)"]
+    BFF["NestJS BFF<br/>(api/)"]
+    NCQP["NC Quick Pass<br/>secure.ncquickpass.com"]
+
+    SPA -->|"same-origin /api"| BFF
+    BFF -->|"Bearer JWT"| NCQP
+    NCQP -.->|"JSON"| BFF
+    BFF -.->|"JSON + HttpOnly cookie<br/>(token never in JS)"| SPA
 ```
 
 The **NestJS backend-for-frontend (BFF)** exists for two reasons:
@@ -41,33 +46,57 @@ The **NestJS backend-for-frontend (BFF)** exists for two reasons:
 Prerequisites: Node 20+ and npm.
 
 ```bash
-# 1. Backend (BFF) — http://localhost:3000
-cd backend
+# 1. API (BFF) — http://localhost:3000
+cd api
 cp .env.example .env        # adjust if needed
 npm install
 npm run start:dev
 
-# 2. Frontend (SPA) — http://localhost:4200  (proxies /api → :3000)
-cd frontend
+# 2. UI (SPA) — http://localhost:4200  (proxies /api → :3000)
+cd ui
 npm install
 npm start
 ```
 
 Then open http://localhost:4200 and log in with your NC Quick Pass credentials.
 
+## Running with Docker
+
+The whole stack ships as two containers. The frontend's nginx serves the built SPA
+**and** reverse-proxies `/api` to the BFF, so the browser talks to a single origin
+(the HttpOnly cookie stays same-site and there's no CORS to configure).
+
+```bash
+docker compose up --build
+# open http://localhost:8080
+```
+
+Only the `web` container is published (`:8080`); the BFF is reachable only on the
+internal compose network. For anything beyond local use, set a strong cookie secret
+(and enable Secure cookies behind HTTPS):
+
+```bash
+COOKIE_SECRET=$(openssl rand -hex 32) COOKIE_SECURE=true docker compose up --build
+```
+
+| Service | Image base    | Role                                              |
+| ------- | ------------- | ------------------------------------------------- |
+| `web`   | `nginx`       | Serves the Angular SPA + proxies `/api` → `bff`   |
+| `bff`   | `node`        | NestJS backend-for-frontend (not published)       |
+
 ## Project layout
 
 | Path        | What it is                                              |
 | ----------- | ------------------------------------------------------- |
-| `backend/`  | NestJS BFF: auth (cookie session) + NCQP proxy endpoints |
-| `frontend/` | Angular 17 standalone SPA: login + dashboard            |
+| `api/`  | NestJS BFF: auth (cookie session) + NCQP proxy endpoints |
+| `ui/`   | Angular 17 standalone SPA: login + dashboard            |
 
 ## Security notes
 
 - Credentials are POSTed once to the BFF over HTTPS and forwarded to NCQP; they are **not**
   persisted anywhere.
 - The NCQP JWT is held only in an `HttpOnly`, `Secure`, signed session cookie set by the BFF.
-- Set a strong `COOKIE_SECRET` in `backend/.env` for signing.
+- Set a strong `COOKIE_SECRET` in `api/.env` for signing.
 - The API surface was mapped from observed browser traffic; endpoint behavior may change if
   NC Quick Pass updates their site.
 

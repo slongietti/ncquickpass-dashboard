@@ -1,0 +1,70 @@
+.select {
+  position: relative;
+  display: inline-block;
+}
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  min-width: 9rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+.trigger:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+.select.open .trigger {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-dim);
+}
+.caret {
+  color: var(--accent);
+  font-size: 0.7rem;
+}
+.menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 40;
+  margin: 0;
+  padding: 0.25rem;
+  list-style: none;
+  min-width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+.menu li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.menu li:hover {
+  background: var(--bg);
+}
+.menu li.selected {
+  background: var(--accent-dim);
+  color: var(--accent-dark);
+  font-weight: 600;
+}
+.check {
+  color: var(--accent);
+}
+.select.disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}

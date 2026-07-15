@@ -1,0 +1,126 @@
+.vehicles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.vehicle {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'info status'
+    'actions actions';
+  gap: 0.5rem 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+
+.vehicle-info {
+  grid-area: info;
+}
+.vehicle-name {
+  font-weight: 600;
+}
+.vehicle-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-top: 0.15rem;
+}
+.tag {
+  font-family: ui-monospace, monospace;
+}
+
+.status {
+  grid-area: status;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+}
+.until {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+}
+.badge-active {
+  background: #e6f4ea;
+  color: #1e7e34;
+}
+.badge-pending {
+  background: #fdf3d3;
+  color: #8a6100;
+}
+.badge-idle {
+  background: #eef0f2;
+  color: var(--muted);
+}
+
+.actions {
+  grid-area: actions;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border);
+
+  .btn-primary,
+  .btn-danger {
+    padding: 0.4rem 0.7rem;
+    font-size: 0.82rem;
+  }
+}
+.end-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.retained-toggle {
+  margin-top: 0.85rem;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0.5rem 0.25rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  &:hover {
+    color: var(--text);
+  }
+  .chevron {
+    color: var(--accent);
+  }
+}
+
+.vehicles.retained {
+  margin-top: 0.5rem;
+}
+.retained-item {
+  grid-template-areas: 'info status';
+  grid-template-columns: 1fr auto;
+  opacity: 0.85;
+}

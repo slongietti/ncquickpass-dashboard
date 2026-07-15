@@ -1,0 +1,101 @@
+<section class="card">
+  <header class="card-head">
+    <h2>HOV Status</h2>
+  </header>
+
+  @if (vehicles.length === 0) {
+    <p class="empty">No transponders found on this account.</p>
+  }
+
+  <ul class="vehicles">
+    @for (v of activeVehicles; track v.transponderNumber) {
+      <li class="vehicle">
+        <div class="vehicle-info">
+          <div class="vehicle-name">{{ v.friendlyName || 'Transponder' }}</div>
+          <div class="vehicle-meta">
+            <span>{{ v.description || '—' }}</span>
+            <span class="tag">#{{ v.transponderNumber }}</span>
+          </div>
+        </div>
+
+        @if (declarationFor(v.transponderNumber); as decl) {
+          <div class="status">
+            @if (isPending(decl)) {
+              <span class="badge badge-pending">Pending</span>
+              <span class="until">active in {{ countdown(decl) }}</span>
+              @if (decl.endDateTime) {
+                <span class="until">until {{ decl.endDateTime | date: 'MMM d, h:mm a' }}</span>
+              }
+            } @else {
+              <span class="badge badge-active">Active</span>
+              @if (decl.endDateTime) {
+                <span class="until">until {{ decl.endDateTime | date: 'MMM d, h:mm a' }}</span>
+              }
+            }
+          </div>
+        } @else {
+          <div class="status">
+            <span class="badge badge-idle">No active HOV</span>
+          </div>
+        }
+
+        <div class="actions">
+          @if (declarationFor(v.transponderNumber); as decl) {
+            <button
+              class="btn-danger"
+              (click)="onCancel(decl.declarationId)"
+              [disabled]="busyTransponder === v.transponderNumber"
+            >
+              Cancel HOV
+            </button>
+          } @else {
+            <label class="end-picker">
+              <span>HOV end</span>
+              <input
+                type="text"
+                class="date-field"
+                placeholder="Select date &amp; time"
+                appDateTimePicker
+                (valueChange)="endInputs[v.transponderNumber] = $event ?? ''"
+                [disabled]="busyTransponder === v.transponderNumber"
+              />
+            </label>
+            <button
+              class="btn-primary"
+              (click)="onSetEnd(v.transponderNumber)"
+              [disabled]="busyTransponder === v.transponderNumber"
+            >
+              Set HOV end
+            </button>
+          }
+        </div>
+      </li>
+    }
+  </ul>
+
+  @if (retainedVehicles.length > 0) {
+    <button class="retained-toggle" (click)="toggleRetained()" [attr.aria-expanded]="showRetained">
+      <span class="chevron" aria-hidden="true">{{ showRetained ? '▾' : '▸' }}</span>
+      Retained transponders ({{ retainedVehicles.length }})
+    </button>
+
+    @if (showRetained) {
+      <ul class="vehicles retained">
+        @for (v of retainedVehicles; track v.transponderNumber) {
+          <li class="vehicle retained-item">
+            <div class="vehicle-info">
+              <div class="vehicle-name">{{ v.friendlyName || 'Transponder' }}</div>
+              <div class="vehicle-meta">
+                <span>{{ v.description || '—' }}</span>
+                <span class="tag">#{{ v.transponderNumber }}</span>
+              </div>
+            </div>
+            <div class="status">
+              <span class="badge badge-idle">{{ v.status }}</span>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  }
+</section>

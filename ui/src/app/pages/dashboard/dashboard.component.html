@@ -1,0 +1,56 @@
+<header class="topbar">
+  <div class="brand">
+    <img class="brand-logo" src="assets/ncta-logo.svg" alt="NC Quick Pass" />
+    <div class="brand-text">
+      <div class="title">Dashboard</div>
+      @if (accountId(); as acct) {
+        <div class="acct">Account {{ acct }}</div>
+      }
+    </div>
+  </div>
+  <div class="topbar-actions">
+    <button class="btn-ghost" (click)="logout()">Sign out</button>
+  </div>
+</header>
+
+<main class="content">
+  @if (actionMessage(); as msg) {
+    <div class="toast">{{ msg }}</div>
+  }
+
+  @if (error(); as err) {
+    <div class="alert" role="alert">
+      {{ err }}
+      <button class="btn-ghost" (click)="loadAll()">Retry</button>
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="loading">Loading…</div>
+  } @else if (!error()) {
+    <div class="grid">
+      <div class="col">
+        <app-hov-status
+          [vehicles]="vehicles()"
+          [declarations]="declarations()"
+          [busyTransponder]="busyTransponder()"
+          (activate)="onActivate($event)"
+          (cancel)="onCancel($event)"
+        />
+
+        <app-account-summary
+          [balance]="account()?.currentBalance ?? null"
+          [replenishments]="replenishments()"
+        />
+      </div>
+
+      <app-trip-list
+        [trips]="trips()"
+        [days]="days()"
+        [dayOptions]="dayOptions"
+        [loading]="txLoading()"
+        (daysChange)="changeDays($event)"
+      />
+    </div>
+  }
+</main>

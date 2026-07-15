@@ -1,0 +1,179 @@
+/* Pin the card just below the sticky top bar so it stays fully in view, and cap
+   its height so the toll list scrolls INSIDE the card rather than off-screen. */
+:host {
+  display: block;
+  position: sticky;
+  top: 4.75rem;
+  align-self: start;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 6.25rem);
+}
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex: 0 0 auto;
+}
+.head-main {
+  min-width: 0;
+}
+.range {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+  flex: 0 0 auto;
+}
+.chip {
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  &.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+}
+
+.date-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.hwy-chip {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: #eef0f2;
+  color: var(--muted);
+
+  &.i77 {
+    background: var(--accent-dim);
+    color: var(--accent-dark);
+  }
+}
+
+.trips {
+  list-style: none;
+  margin: 0;
+  padding: 0.25rem 0.25rem 0.25rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.trip {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg);
+  /* Never let the flex column compress a trip — it would clip its tolls.
+     Each trip keeps its natural height and the list scrolls instead. */
+  flex: 0 0 auto;
+
+  &.open {
+    border-color: var(--accent);
+  }
+}
+
+.trip-head {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  font: inherit;
+
+  &:hover {
+    background: var(--surface);
+  }
+}
+
+.chevron {
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+
+.trip-when {
+  display: flex;
+  flex-direction: column;
+  .date {
+    font-weight: 600;
+  }
+  .time {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+}
+
+.trip-summary {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  .count {
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .total {
+    font-weight: 700;
+    color: var(--accent);
+  }
+}
+
+.tolls {
+  list-style: none;
+  margin: 0;
+  padding: 0 1rem 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.toll {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  font-size: 0.88rem;
+
+  & + .toll {
+    border-top: 1px dashed var(--border);
+  }
+}
+.toll-time {
+  color: var(--muted);
+}
+.toll-amt {
+  font-variant-numeric: tabular-nums;
+  min-width: 4rem;
+  text-align: right;
+}

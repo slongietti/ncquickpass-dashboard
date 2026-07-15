@@ -1,0 +1,28 @@
+<section class="card">
+  <header class="card-head">
+    <div class="head-main">
+      <h2>Account</h2>
+      <p class="hint">Your current balance and add-money activity.</p>
+    </div>
+  </header>
+
+  <div class="balance">
+    <span class="label">Current balance</span>
+    <span class="amount">{{ balance === null ? '—' : (balance | currency) }}</span>
+  </div>
+
+  <h3 class="sub">Replenishments</h3>
+  @if (replenishments.length === 0) {
+    <p class="empty">No replenishments in this range.</p>
+  } @else {
+    <ul class="replenish">
+      @for (r of replenishments; track $index) {
+        <li>
+          <span class="when">{{ r.transactionDate | date: 'MMM d, y' }}</span>
+          <span class="type">{{ r.transactionType || 'Replenish' }}</span>
+          <span class="amt">{{ (r.creditAmount || 0) | currency }}</span>
+        </li>
+      }
+    </ul>
+  }
+</section>
