@@ -1,6 +1,6 @@
-/// Maps a concrete occurrence (UTC window) to the NCQP declaration created for it.
-/// The natural key gives idempotent materialization.
-model MaterializedDeclaration {
+/// Maps a concrete scheduled occurrence (UTC window) to the NCQP declaration
+/// created for it. The natural key gives idempotent materialization.
+model HOVDeclaration {
   id                String   @id @default(cuid())
   accountId         String // TENANT KEY (denormalized for row-level filtering)
   scheduleId        String

@@ -1,12 +1,16 @@
-/// A day of the recurring week. allDay=true means the whole day (no TimeRange rows).
+/// A day of the recurring week. allDay=true means the whole day is active;
+/// otherwise `ranges` holds the active windows. Ranges are stored inline as a
+/// JSON array of { startMinute, endMinute } (minutes-from-midnight, local to the
+/// schedule timezone) — they're always read and written together with the day,
+/// so a separate table would only add joins.
 model ScheduleDay {
   id         String  @id @default(cuid())
-  scheduleId String
+  scheduleId String // FK to the owning WeeklySchedule
   dayOfWeek  Int // 0=Sun .. 6=Sat (UI orders Mon-first)
   allDay     Boolean @default(false)
+  ranges     Json    @default("[]")
 
   schedule WeeklySchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-  ranges   TimeRange[]
 
   @@unique([scheduleId, dayOfWeek])
 }
