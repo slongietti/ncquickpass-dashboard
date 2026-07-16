@@ -160,6 +160,28 @@ button {
   box-shadow: 0 0 0 2px var(--accent-dim);
 }
 
+/* Time-only picker field (flatpickr altInput, so global like .date-field). */
+.time-field {
+  width: 7.5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.time-field:hover {
+  border-color: var(--accent);
+}
+.time-field:focus,
+.time-field.active {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-dim);
+}
+
 /* flatpickr accent overrides to match the app theme */
 .flatpickr-day.selected,
 .flatpickr-day.selected:hover {

@@ -43,9 +43,21 @@
               <div class="ranges">
                 @for (range of day.ranges; track $index) {
                   <div class="range">
-                    <input type="time" class="time-field" [(ngModel)]="range.start" />
+                    <input
+                      type="text"
+                      class="time-field"
+                      appTimePicker
+                      [value]="range.start"
+                      (valueChange)="range.start = $event"
+                    />
                     <span class="dash">–</span>
-                    <input type="time" class="time-field" [(ngModel)]="range.end" />
+                    <input
+                      type="text"
+                      class="time-field"
+                      appTimePicker
+                      [value]="range.end"
+                      (valueChange)="range.end = $event"
+                    />
                     <button
                       type="button"
                       class="range-remove"

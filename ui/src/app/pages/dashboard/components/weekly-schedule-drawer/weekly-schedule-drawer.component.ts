@@ -14,6 +14,7 @@ import { VehicleView } from '../../../../core/models/VehicleView';
 import { WeeklySchedule } from '../../../../core/models/WeeklySchedule';
 import { DrawerComponent } from '../../../../shared/drawer/drawer.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select/select.component';
+import { TimePickerDirective } from '../../../../core/time-picker.directive';
 
 interface EditRange {
   start: string; // HH:MM
@@ -41,7 +42,7 @@ const WEEK: ReadonlyArray<{ dayOfWeek: number; label: string }> = [
 @Component({
   selector: 'app-weekly-schedule-drawer',
   standalone: true,
-  imports: [FormsModule, DrawerComponent, SelectComponent],
+  imports: [FormsModule, DrawerComponent, SelectComponent, TimePickerDirective],
   templateUrl: './weekly-schedule-drawer.component.html',
   styleUrl: './weekly-schedule-drawer.component.scss',
 })
