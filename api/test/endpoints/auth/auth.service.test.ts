@@ -1,4 +1,4 @@
-import { AuthService } from './auth.service';
+import { AuthService } from '../../../src/endpoints/auth/auth.service';
 
 describe('AuthService.parseUserInfo', () => {
   it('parseUserInfo_withValidJson_returnsParsedObject', () => {

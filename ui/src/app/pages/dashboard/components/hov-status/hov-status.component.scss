@@ -1,13 +1,45 @@
 .card-head-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
+}
+
+.summary {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.head-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
 }
 
 .schedule-btn {
   font-size: 0.82rem;
   padding: 0.4rem 0.7rem;
+}
+
+.status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-end;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.cancel-mini {
+  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
 }
 
 .vehicles {

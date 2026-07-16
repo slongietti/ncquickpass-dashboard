@@ -56,6 +56,8 @@ export class WeeklyScheduleDrawerComponent implements OnChanges {
 
   selectedTransponder = '';
   enabled = false;
+  credentialOnFile = false;
+  password = '';
   private timezone = 'America/New_York';
   private scheduleExists = false;
 
@@ -64,6 +66,7 @@ export class WeeklyScheduleDrawerComponent implements OnChanges {
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly error = signal<string | null>(null);
+  readonly passwordPromptOpen = signal(false);
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['open'] && this.open) {
@@ -102,16 +105,44 @@ export class WeeklyScheduleDrawerComponent implements OnChanges {
     this.error.set(null);
     const days = this.buildDays();
     if (days === null) return; // validation error already set
+    // Enabling automatic scheduling for the first time needs the password to arm
+    // the credential vault. Prompt for it before saving.
+    if (this.enabled && !this.credentialOnFile && !this.password) {
+      this.passwordPromptOpen.set(true);
+      return;
+    }
+    this.doSave(days);
+  }
+
+  confirmPassword(): void {
+    if (!this.password) {
+      this.error.set('Enter your NC Quick Pass password to enable automatic scheduling.');
+      return;
+    }
+    const days = this.buildDays();
+    if (days === null) return;
+    this.passwordPromptOpen.set(false);
+    this.doSave(days);
+  }
+
+  cancelPassword(): void {
+    this.passwordPromptOpen.set(false);
+    this.password = '';
+  }
+
+  private doSave(days: PutSchedule['days']): void {
     this.saving.set(true);
     const body: PutSchedule = {
       transponderNumber: this.selectedTransponder,
       enabled: this.enabled,
       timezone: this.timezone,
       days,
+      ...(this.password ? { password: this.password } : {}),
     };
     this.hov.putSchedule(body).subscribe({
       next: (schedule) => {
         this.saving.set(false);
+        this.password = '';
         this.apply(schedule);
         this.saved.emit('Weekly schedule saved.');
         this.close.emit();
@@ -160,6 +191,7 @@ export class WeeklyScheduleDrawerComponent implements OnChanges {
   private apply(schedule: WeeklySchedule): void {
     this.enabled = schedule.enabled;
     this.timezone = schedule.timezone;
+    this.credentialOnFile = schedule.credentialOnFile;
     this.scheduleExists = schedule.days.length > 0;
     this.dayEdits = WEEK.map((w) => {
       const found = schedule.days.find((d) => d.dayOfWeek === w.dayOfWeek);

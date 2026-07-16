@@ -18,6 +18,20 @@
     <div class="toast">{{ msg }}</div>
   }
 
+  @if (conflict(); as c) {
+    <div class="conflict-prompt" role="alertdialog">
+      <p>
+        This overlaps {{ c.declarations.length }} scheduled HOV
+        window{{ c.declarations.length === 1 ? '' : 's' }} for this vehicle. Cancel the scheduled
+        one{{ c.declarations.length === 1 ? '' : 's' }} and set this ad-hoc HOV instead?
+      </p>
+      <div class="conflict-actions">
+        <button class="btn-primary" (click)="confirmConflict()">Cancel scheduled &amp; continue</button>
+        <button class="btn-ghost" (click)="cancelConflict()">Keep scheduled</button>
+      </div>
+    </div>
+  }
+
   @if (error(); as err) {
     <div class="alert" role="alert">
       {{ err }}
@@ -37,6 +51,7 @@
           (activate)="onActivate($event)"
           (cancel)="onCancel($event)"
           (openSchedule)="openSchedule()"
+          (openFuture)="openFuture()"
         />
 
         <app-account-summary
@@ -61,4 +76,10 @@
   [vehicles]="vehicles()"
   (close)="closeSchedule()"
   (saved)="onScheduleSaved($event)"
+/>
+
+<app-future-declarations-drawer
+  [open]="futureDrawerOpen()"
+  (close)="closeFuture()"
+  (canceled)="onScheduleSaved($event)"
 />

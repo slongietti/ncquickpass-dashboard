@@ -1,0 +1,64 @@
+<main class="page">
+  <header class="page-head">
+    <img class="logo" src="assets/ncta-logo.svg" alt="NC Quick Pass" />
+    <h1>How scheduling protects your credentials</h1>
+    <p class="lede">
+      By default this app never stores your credentials — only a short-lived token lives in your
+      browser. Automatic weekly scheduling is the one exception, and only if you opt in.
+    </p>
+  </header>
+
+  <section class="card">
+    <h2>What happens to your password</h2>
+    <ul class="points">
+      <li>
+        <strong>You stay in control.</strong> Nothing is stored unless you turn on a weekly
+        schedule and enter your password to authorize it.
+      </li>
+      <li>
+        <strong>Encrypted with AWS KMS.</strong> Your password is sealed using an AWS Key
+        Management Service key that never leaves KMS — this app never holds the key material. Only
+        the ciphertext is kept in our database.
+      </li>
+      <li>
+        <strong>No person has standing access.</strong> The KMS key policy lets only the
+        scheduler's automated role decrypt — no developer or administrator is granted access, not
+        even for break-glass. Every decryption is recorded in AWS CloudTrail, tagged with your
+        account, and we alarm on any decryption that isn't tied to a scheduled run.
+      </li>
+      <li>
+        <strong>Used only by the scheduler.</strong> The background job decrypts it in memory just
+        long enough to sign in to NC Quick Pass for a fresh token, then discards the plaintext. It
+        is never shown to anyone, never logged in plaintext, and never sent back to your browser.
+      </li>
+      <li>
+        <strong>Revocable anytime.</strong> Remove your weekly schedule and the stored credentials
+        are deleted.
+      </li>
+    </ul>
+    <p class="honest">
+      You don't have to take our word for any of this. This entire application is open source — the
+      encryption, the key handling, and the scheduler are all in public code you can read and audit
+      (linked below). Because the scheduler has to run while you're away, the system must be able to
+      decrypt without you present; there is no way around that. That's exactly why the
+      implementation is public and verifiable rather than something you're asked to simply trust.
+    </p>
+  </section>
+
+  <section class="card">
+    <h2>The flow</h2>
+    <div class="diagram" #diagram></div>
+    @if (!rendered()) {
+      <p class="empty">Diagram unavailable — the steps above describe the same flow.</p>
+    }
+  </section>
+
+  <p class="source">
+    This is open source — you can verify every claim in the code:
+    <a href="https://github.com/slongietti/ncquickpass-dashboard" target="_blank" rel="noopener">
+      github.com/slongietti/ncquickpass-dashboard
+    </a>
+  </p>
+
+  <p class="back"><a href="/">← Back to the dashboard</a></p>
+</main>

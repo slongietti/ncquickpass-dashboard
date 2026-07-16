@@ -93,5 +93,31 @@
         Cancel
       </button>
     </div>
+
+    @if (passwordPromptOpen()) {
+      <div class="pw-overlay">
+        <div class="pw-card">
+          <h3>Enable automatic scheduling</h3>
+          <p>
+            Enter your NC Quick Pass password so declarations can be created on your behalf. It's
+            stored encrypted and used only by the background scheduler —
+            <a href="/how-it-works" target="_blank" rel="noopener">how this works</a>.
+          </p>
+          <input
+            type="password"
+            class="pw-input"
+            [(ngModel)]="password"
+            placeholder="NC Quick Pass password"
+            autocomplete="current-password"
+          />
+          <div class="pw-actions">
+            <button type="button" class="btn-primary" (click)="confirmPassword()" [disabled]="saving()">
+              Enable
+            </button>
+            <button type="button" class="btn-ghost" (click)="cancelPassword()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    }
   }
 </app-drawer>

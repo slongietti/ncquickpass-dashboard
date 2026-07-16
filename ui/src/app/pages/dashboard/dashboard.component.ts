@@ -12,10 +12,12 @@ import { DeclarationView } from '../../core/models/DeclarationView';
 import { TransactionView } from '../../core/models/TransactionView';
 import { VehicleView } from '../../core/models/VehicleView';
 import { groupIntoTrips, replenishments } from '../../core/trip-grouping';
+import { FutureDeclaration } from '../../core/models/FutureDeclaration';
 import { ActivateRequest, HovStatusComponent } from './components/hov-status/hov-status.component';
 import { TripListComponent } from './components/trip-list/trip-list.component';
 import { AccountSummaryComponent } from './components/account-summary/account-summary.component';
 import { WeeklyScheduleDrawerComponent } from './components/weekly-schedule-drawer/weekly-schedule-drawer.component';
+import { FutureDeclarationsDrawerComponent } from './components/future-declarations-drawer/future-declarations-drawer.component';
 
 export interface RangeOption {
   label: string;
@@ -41,6 +43,7 @@ const DAY_OPTIONS: RangeOption[] = [
     TripListComponent,
     AccountSummaryComponent,
     WeeklyScheduleDrawerComponent,
+    FutureDeclarationsDrawerComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -69,6 +72,10 @@ export class DashboardComponent implements OnInit {
   readonly busyTransponder = signal<string | null>(null);
   readonly actionMessage = signal<string | null>(null);
   readonly scheduleDrawerOpen = signal(false);
+  readonly futureDrawerOpen = signal(false);
+  readonly conflict = signal<{ req: ActivateRequest; declarations: FutureDeclaration[] } | null>(
+    null,
+  );
 
   ngOnInit(): void {
     this.loadAll();
@@ -112,6 +119,47 @@ export class DashboardComponent implements OnInit {
   onActivate(req: ActivateRequest): void {
     this.busyTransponder.set(req.transponderNumber);
     this.actionMessage.set(null);
+    // Check whether this ad-hoc window overlaps a scheduled declaration first.
+    const start = new Date();
+    const end = req.endDateTime ? new Date(req.endDateTime) : endOfToday();
+    this.hov
+      .checkConflict({
+        transponderNumber: req.transponderNumber,
+        startDateTime: start.toISOString(),
+        endDateTime: end.toISOString(),
+      })
+      .subscribe({
+        next: (conflicts) => {
+          if (conflicts.length > 0) {
+            this.conflict.set({ req, declarations: conflicts });
+            this.busyTransponder.set(null);
+          } else {
+            this.doActivate(req);
+          }
+        },
+        error: () => this.doActivate(req), // conflict check is best-effort
+      });
+  }
+
+  confirmConflict(): void {
+    const pending = this.conflict();
+    if (!pending) return;
+    const ids = pending.declarations.map((d) => d.id);
+    this.conflict.set(null);
+    this.busyTransponder.set(pending.req.transponderNumber);
+    this.hov.resolveConflict(ids).subscribe({
+      next: () => this.doActivate(pending.req),
+      error: (err) => this.handleActionError(err, 'Failed to cancel the scheduled declaration.'),
+    });
+  }
+
+  cancelConflict(): void {
+    this.conflict.set(null);
+    this.busyTransponder.set(null);
+  }
+
+  private doActivate(req: ActivateRequest): void {
+    this.busyTransponder.set(req.transponderNumber);
     this.hov.activate(req.transponderNumber, req.endDateTime).subscribe({
       next: () => this.afterHovChange('HOV declaration set.'),
       error: (err) => this.handleActionError(err, 'Failed to set HOV declaration.'),
@@ -134,6 +182,14 @@ export class DashboardComponent implements OnInit {
 
   closeSchedule(): void {
     this.scheduleDrawerOpen.set(false);
+  }
+
+  openFuture(): void {
+    this.futureDrawerOpen.set(true);
+  }
+
+  closeFuture(): void {
+    this.futureDrawerOpen.set(false);
   }
 
   onScheduleSaved(message: string): void {
@@ -177,4 +233,11 @@ export class DashboardComponent implements OnInit {
     }
     return false;
   }
+}
+
+/** Local end-of-day, used as the implicit end for a rest-of-today activation. */
+function endOfToday(): Date {
+  const d = new Date();
+  d.setHours(23, 59, 59, 999);
+  return d;
 }

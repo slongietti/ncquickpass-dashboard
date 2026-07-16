@@ -134,3 +134,61 @@
   padding-top: 1rem;
   border-top: 1px solid var(--border);
 }
+
+.pw-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(28, 37, 48, 0.45);
+  padding: 1rem;
+}
+
+.pw-card {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 1.25rem;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+
+  h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+  }
+
+  p {
+    margin: 0 0 0.85rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  a {
+    color: var(--accent);
+  }
+}
+
+.pw-input {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: var(--bg);
+  color: var(--text);
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-dim);
+  }
+}
+
+.pw-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}

@@ -26,6 +26,7 @@ export class HovStatusComponent implements OnInit, OnDestroy {
   @Output() activate = new EventEmitter<ActivateRequest>();
   @Output() cancel = new EventEmitter<string>();
   @Output() openSchedule = new EventEmitter<void>();
+  @Output() openFuture = new EventEmitter<void>();
 
   /** Ticks every second to drive the "Pending" countdown. */
   private readonly now = signal(Date.now());
@@ -61,18 +62,31 @@ export class HovStatusComponent implements OnInit, OnDestroy {
     return (v.status || '').toUpperCase() === 'ACTIVE';
   }
 
-  declarationFor(transponderNumber: string): DeclarationView | null {
-    return (
-      this.declarations.find(
-        (d) =>
-          d.transponderNumber === transponderNumber &&
-          ACTIVE_STATUSES.includes((d.status || '').toLowerCase()),
-      ) ?? null
+  /** All active/submitted declarations for a transponder (a vehicle may have several). */
+  declarationsFor(transponderNumber: string): DeclarationView[] {
+    return this.declarations.filter(
+      (d) =>
+        d.transponderNumber === transponderNumber &&
+        ACTIVE_STATUSES.includes((d.status || '').toLowerCase()),
     );
   }
 
   isActive(transponderNumber: string): boolean {
-    return this.declarationFor(transponderNumber) !== null;
+    return this.declarationsFor(transponderNumber).length > 0;
+  }
+
+  /** Card-head summary of the current HOV state across all vehicles. */
+  get summary(): string {
+    const active = this.declarations.filter((d) =>
+      ACTIVE_STATUSES.includes((d.status || '').toLowerCase()),
+    );
+    if (active.length === 0) return 'No active HOV declarations';
+    const pending = active.filter((d) => this.isPending(d)).length;
+    const live = active.length - pending;
+    const parts: string[] = [];
+    if (live > 0) parts.push(`${live} active`);
+    if (pending > 0) parts.push(`${pending} pending`);
+    return `${parts.join(' · ')} HOV declaration${active.length === 1 ? '' : 's'}`;
   }
 
   /** A declaration is pending until its startDateTime (the 15-min lead time). */

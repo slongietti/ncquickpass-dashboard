@@ -48,6 +48,7 @@ export class AuthService {
       token: token.access_token,
       userId,
       accountId,
+      username,
       exp: Date.now() + expiresInSec * 1000,
     };
   }

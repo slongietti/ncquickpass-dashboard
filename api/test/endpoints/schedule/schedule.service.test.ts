@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { PutScheduleDto } from '../../models/schedule/PutScheduleDto';
-import { ScheduleService } from './schedule.service';
+import { PrismaService } from '../../../src/prisma/prisma.service';
+import { PutScheduleDto } from '../../../src/models/schedule/PutScheduleDto';
+import { ScheduleService } from '../../../src/endpoints/schedule/schedule.service';
 
 /** Minimal Prisma test double capturing the calls the service makes. */
 function makePrismaMock() {

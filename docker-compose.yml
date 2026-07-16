@@ -25,6 +25,14 @@ services:
       # `prisma migrate deploy` (run at startup) only applies pending migrations,
       # so the file is never overwritten.
       DATABASE_URL: file:/data/ncquickpass.db
+      # Credential encryption for unattended scheduling. Prefer AWS KMS in prod
+      # (the app never holds the key; decryption is governed by the KMS key
+      # policy). Fall back to a local AES key for non-AWS deploys. If neither is
+      # set, credential storage and the background scheduler are disabled.
+      #   CREDENTIAL_KEY_ARN=arn:aws:kms:...:key/... docker compose up
+      #   SCHEDULE_ENCRYPTION_KEY=$(openssl rand -hex 32) docker compose up
+      CREDENTIAL_KEY_ARN: ${CREDENTIAL_KEY_ARN:-}
+      SCHEDULE_ENCRYPTION_KEY: ${SCHEDULE_ENCRYPTION_KEY:-}
     expose:
       - '3000'
     volumes:

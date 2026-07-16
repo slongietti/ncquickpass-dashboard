@@ -11,6 +11,8 @@ export interface NcqpSession {
   userId: string;
   /** Account number — needed for HOV declarations. */
   accountId: string;
+  /** NCQP login name — stored so the schedule vault can re-authenticate later. */
+  username: string;
   /** Absolute expiry, epoch ms. */
   exp: number;
 }

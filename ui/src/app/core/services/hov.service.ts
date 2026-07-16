@@ -5,6 +5,7 @@ import { DeclarationView } from '../models/DeclarationView';
 import { VehicleView } from '../models/VehicleView';
 import { WeeklySchedule } from '../models/WeeklySchedule';
 import { ScheduleDay } from '../models/ScheduleDay';
+import { FutureDeclaration } from '../models/FutureDeclaration';
 
 /** Body accepted by PUT /api/hov/schedule. */
 export interface PutSchedule {
@@ -12,6 +13,15 @@ export interface PutSchedule {
   enabled: boolean;
   timezone?: string;
   days: ScheduleDay[];
+  /** NCQP password, only when first enabling scheduling (no credential on file). */
+  password?: string;
+}
+
+/** An ad-hoc window to check for conflicts with scheduled declarations. */
+export interface ConflictCheck {
+  transponderNumber: string;
+  startDateTime: string;
+  endDateTime: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -53,5 +63,23 @@ export class HovService {
   deleteSchedule(transponderNumber: string): Observable<{ deleted: boolean }> {
     const params = new HttpParams().set('transponder', transponderNumber);
     return this.http.delete<{ deleted: boolean }>('/api/hov/schedule', { params });
+  }
+
+  getFutureDeclarations(): Observable<FutureDeclaration[]> {
+    return this.http.get<FutureDeclaration[]>('/api/hov/schedule/future-declarations');
+  }
+
+  cancelFutureDeclaration(id: string): Observable<{ canceled: boolean }> {
+    return this.http.put<{ canceled: boolean }>('/api/hov/schedule/future-declarations/cancel', {
+      id,
+    });
+  }
+
+  checkConflict(check: ConflictCheck): Observable<FutureDeclaration[]> {
+    return this.http.post<FutureDeclaration[]>('/api/hov/schedule/conflict-check', check);
+  }
+
+  resolveConflict(ids: string[]): Observable<{ canceled: number }> {
+    return this.http.post<{ canceled: number }>('/api/hov/schedule/resolve-conflict', { ids });
   }
 }
