@@ -1,15 +1,35 @@
 <main class="page">
   <header class="page-head">
     <img class="logo" src="assets/ncta-logo.svg" alt="NC Quick Pass" />
-    <h1>How scheduling protects your credentials</h1>
-    <p class="lede">
-      By default this app never stores your credentials — only a short-lived token lives in your
-      browser. Automatic weekly scheduling is the one exception, and only if you opt in.
-    </p>
+    <h1>Is my password safe?</h1>
   </header>
 
   <section class="card">
-    <h2>What happens to your password</h2>
+    <h2>Key Points</h2>
+    <ul class="points">
+      <li><strong>We don't keep your password</strong> unless you turn on weekly scheduling.</li>
+      <li>
+        <strong>If you do turn it on,</strong> your password is locked with a key that lives inside
+        Amazon's key vault — not inside this app. So the app only ever holds scrambled text.
+      </li>
+      <li>
+        <strong>A background helper</strong> can briefly unlock it — only in memory, only to log in
+        on your behalf — and every unlock is recorded.
+      </li>
+      <li><strong>Change your mind?</strong> Turn scheduling off and the saved password is deleted.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>The flow</h2>
+    <div class="diagram" #diagram></div>
+    @if (!rendered()) {
+      <p class="empty">Diagram unavailable — the steps above and below describe the same flow.</p>
+    }
+  </section>
+
+  <section class="card">
+    <h2>The details</h2>
     <ul class="points">
       <li>
         <strong>You stay in control.</strong> Nothing is stored unless you turn on a weekly
@@ -36,27 +56,18 @@
         are deleted.
       </li>
     </ul>
-    <p class="honest">
-      You don't have to take our word for any of this. This entire application is open source — the
-      encryption, the key handling, and the scheduler are all in public code you can read and audit
-      (linked below). Because the scheduler has to run while you're away, the system must be able to
-      decrypt without you present; there is no way around that. That's exactly why the
-      implementation is public and verifiable rather than something you're asked to simply trust.
-    </p>
-  </section>
-
-  <section class="card">
-    <h2>The flow</h2>
-    <div class="diagram" #diagram></div>
-    @if (!rendered()) {
-      <p class="empty">Diagram unavailable — the steps above describe the same flow.</p>
-    }
   </section>
 
   <p class="source">
-    This is open source — you can verify every claim in the code:
-    <a href="https://github.com/slongietti/ncquickpass-dashboard" target="_blank" rel="noopener">
-      github.com/slongietti/ncquickpass-dashboard
+    Because the scheduler runs while you're away, it has to be able to decrypt without you present —
+    there's no way around that. So rather than ask you to trust us, we made it all open source; read
+    exactly how the encryption, key handling, and scheduler work:
+    <a
+      href="https://github.com/Volare-Consulting-Software/ncquickpass-dashboard"
+      target="_blank"
+      rel="noopener"
+    >
+      github.com/Volare-Consulting-Software/ncquickpass-dashboard
     </a>
   </p>
 

@@ -1,5 +1,12 @@
 import { TransactionView } from './models/TransactionView';
-import { groupIntoTrips, highwayOf, isHovRoute, replenishments } from './trip-grouping';
+import {
+  groupIntoTrips,
+  highwayOf,
+  HIGHWAY_I77,
+  HIGHWAY_OTHER,
+  isHovRoute,
+  replenishments,
+} from './trip-grouping';
 
 function toll(overrides: Partial<TransactionView>): TransactionView {
   return {
@@ -29,8 +36,8 @@ describe('isHovRoute / highwayOf', () => {
   });
 
   it('highwayOf_withI77Exit_returnsI77_otherwiseOther', () => {
-    expect(highwayOf('I-77 EL Exit 16')).toBe('I-77');
-    expect(highwayOf('Ghent South / AS')).toBe('Other');
+    expect(highwayOf('I-77 EL Exit 16')).toBe(HIGHWAY_I77);
+    expect(highwayOf('Ghent South / AS')).toBe(HIGHWAY_OTHER);
   });
 });
 
@@ -45,7 +52,7 @@ describe('groupIntoTrips', () => {
     expect(trips.length).toBe(1);
     expect(trips[0].transactions.length).toBe(3);
     expect(trips[0].total).toBe(4.5);
-    expect(trips[0].highway).toBe('I-77');
+    expect(trips[0].highway).toBe(HIGHWAY_I77);
   });
 
   it('groupIntoTrips_withGapOverFiveMinutes_startsNewTrip', () => {
@@ -74,7 +81,7 @@ describe('groupIntoTrips', () => {
     ];
     const trips = groupIntoTrips(txns);
     expect(trips.length).toBe(2);
-    expect(trips.map((t) => t.highway).sort()).toEqual(['I-77', 'Other']);
+    expect(trips.map((t) => t.highway).sort()).toEqual([HIGHWAY_I77, HIGHWAY_OTHER]);
   });
 
   it('groupIntoTrips_withNonI77Tolls_includesThemAsOther', () => {

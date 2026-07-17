@@ -12,9 +12,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { HovService, PutSchedule } from '../../../../core/services/hov.service';
 import { serverMessage } from '../../../../core/http-utils';
-import { VehicleView } from '../../../../core/models/VehicleView';
 import { WeeklySchedule } from '../../../../core/models/WeeklySchedule';
-import { SelectComponent, SelectOption } from '../../../../shared/select/select.component';
 import { PasswordPromptComponent } from '../../../../shared/password-prompt/password-prompt.component';
 import { TimePickerDirective } from '../../../../core/time-picker.directive';
 
@@ -44,7 +42,7 @@ const WEEK: ReadonlyArray<{ dayOfWeek: number; label: string }> = [
 @Component({
   selector: 'app-weekly-schedule-panel',
   standalone: true,
-  imports: [FormsModule, SelectComponent, PasswordPromptComponent, TimePickerDirective],
+  imports: [FormsModule, PasswordPromptComponent, TimePickerDirective],
   templateUrl: './weekly-schedule-panel.component.html',
   styleUrl: './weekly-schedule-panel.component.scss',
 })
@@ -53,10 +51,10 @@ export class WeeklySchedulePanelComponent implements OnChanges {
 
   /** True while the parent drawer is open on the Weekly tab; triggers a (re)load. */
   @Input() active = false;
-  @Input() vehicles: VehicleView[] = [];
+  /** The vehicle selected in the drawer; both tabs filter on it. */
+  @Input() transponder = '';
   @Output() saved = new EventEmitter<string>();
 
-  selectedTransponder = '';
   password = '';
   scheduleExists = false;
   private timezone = 'America/New_York';
@@ -71,30 +69,10 @@ export class WeeklySchedulePanelComponent implements OnChanges {
   readonly confirmingClear = signal(false);
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['active'] && this.active) {
-      if (!this.selectedTransponder && this.vehicles.length > 0) {
-        this.selectedTransponder = this.vehicles[0].transponderNumber;
-      }
-      if (this.selectedTransponder) this.load(this.selectedTransponder);
+    // (Re)load whenever the drawer opens on this tab or the selected vehicle changes.
+    if ((changes['active'] || changes['transponder']) && this.active && this.transponder) {
+      this.load(this.transponder);
     }
-  }
-
-  get vehicleOptions(): SelectOption[] {
-    const isActive = (v: VehicleView) => (v.status || '').toUpperCase() === 'ACTIVE';
-    // Active transponders first, retained second (stable within each group).
-    return [...this.vehicles]
-      .sort((a, b) => Number(isActive(b)) - Number(isActive(a)))
-      .map((v) => ({
-        label: v.friendlyName
-          ? `${v.friendlyName} · #${v.transponderNumber}`
-          : `#${v.transponderNumber}`,
-        value: v.transponderNumber,
-      }));
-  }
-
-  onVehicleChange(value: number | string): void {
-    this.selectedTransponder = String(value);
-    this.load(this.selectedTransponder);
   }
 
   toggleAllDay(day: DayEdit): void {
@@ -142,7 +120,7 @@ export class WeeklySchedulePanelComponent implements OnChanges {
   private doSave(days: PutSchedule['days']): void {
     this.saving.set(true);
     const body: PutSchedule = {
-      transponderNumber: this.selectedTransponder,
+      transponderNumber: this.transponder,
       enabled: days.length > 0,
       timezone: this.timezone,
       days,
@@ -188,7 +166,7 @@ export class WeeklySchedulePanelComponent implements OnChanges {
   confirmClear(): void {
     this.confirmingClear.set(false);
     this.saving.set(true);
-    this.hov.deleteSchedule(this.selectedTransponder).subscribe({
+    this.hov.deleteSchedule(this.transponder).subscribe({
       next: () => {
         this.saving.set(false);
         this.saved.emit('Weekly schedule cleared.');

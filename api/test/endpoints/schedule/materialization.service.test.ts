@@ -1,6 +1,7 @@
 import { MaterializationService } from '../../../src/endpoints/schedule/materialization.service';
 import { PrismaService } from '../../../src/prisma/prisma.service';
 import { NcqpService } from '../../../src/endpoints/ncqp/ncqp.service';
+import { DeclarationStatus } from '../../../src/endpoints/schedule/schedule.constants';
 
 const CTX = { token: 't', userId: 'u', accountId: 'ACC' };
 const TZ = 'America/New_York';
@@ -76,7 +77,7 @@ describe('MaterializationService.reconcileSchedule', () => {
     expect(ncqp.cancelHov).toHaveBeenCalledWith('t', '999', 'u');
     expect(prisma.hOVDeclaration.update).toHaveBeenCalledWith({
       where: { id: 'row1' },
-      data: { status: 'canceled' },
+      data: { status: DeclarationStatus.Canceled },
     });
     expect(ncqp.activateHov).not.toHaveBeenCalled();
     expect(result.canceled).toBe(1);

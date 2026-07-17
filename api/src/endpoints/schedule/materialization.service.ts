@@ -3,6 +3,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { NcqpService } from '../ncqp/ncqp.service';
 import { computeWindows, parseRanges, WindowDay } from './schedule-window';
 import { overlaps } from './conflict';
+import { DeclarationSource, DeclarationStatus } from './schedule.constants';
 
 /** Credentials + identifiers needed to act on NCQP for one tenant. */
 export interface MaterializeContext {
@@ -93,7 +94,7 @@ export class MaterializationService {
         accountId: ctx.accountId,
         transponderNumber: schedule.transponderNumber,
         scheduleId: schedule.id,
-        status: 'materialized',
+        status: DeclarationStatus.Materialized,
         windowEnd: { gte: new Date() },
       },
     });
@@ -127,18 +128,18 @@ export class MaterializationService {
           create: {
             accountId: ctx.accountId,
             scheduleId: schedule.id,
-            source: 'weekly',
+            source: DeclarationSource.Weekly,
             transponderNumber: schedule.transponderNumber,
             windowStart: window.start,
             windowEnd: window.end,
             ncqpDeclarationId: String(declarationId),
-            status: 'materialized',
+            status: DeclarationStatus.Materialized,
           },
           update: {
             scheduleId: schedule.id,
-            source: 'weekly',
+            source: DeclarationSource.Weekly,
             ncqpDeclarationId: String(declarationId),
-            status: 'materialized',
+            status: DeclarationStatus.Materialized,
           },
         });
         created++;
@@ -154,7 +155,7 @@ export class MaterializationService {
     let canceled = 0;
     for (const row of existing) {
       if (desiredMap.has(keyOf(row.windowStart, row.windowEnd))) continue;
-      canceled += (await this.cancelRow(ctx, row.id, row.ncqpDeclarationId, 'canceled')) ? 1 : 0;
+      canceled += (await this.cancelRow(ctx, row.id, row.ncqpDeclarationId, DeclarationStatus.Canceled)) ? 1 : 0;
     }
 
     return { created, canceled };
@@ -162,7 +163,7 @@ export class MaterializationService {
 
   async listFuture(accountId: string): Promise<FutureDeclarationView[]> {
     const rows = await this.prisma.hOVDeclaration.findMany({
-      where: { accountId, status: 'materialized', windowEnd: { gte: new Date() } },
+      where: { accountId, status: DeclarationStatus.Materialized, windowEnd: { gte: new Date() } },
       orderBy: { windowStart: 'asc' },
     });
     return rows.map(MaterializationService.toView);
@@ -201,17 +202,17 @@ export class MaterializationService {
       create: {
         accountId: ctx.accountId,
         scheduleId: null,
-        source: 'adhoc',
+        source: DeclarationSource.Adhoc,
         transponderNumber,
         windowStart: start,
         windowEnd: end,
         ncqpDeclarationId: String(declarationId),
-        status: 'materialized',
+        status: DeclarationStatus.Materialized,
       },
       update: {
-        source: 'adhoc',
+        source: DeclarationSource.Adhoc,
         ncqpDeclarationId: String(declarationId),
-        status: 'materialized',
+        status: DeclarationStatus.Materialized,
       },
     });
     return MaterializationService.toView(row);
@@ -228,7 +229,7 @@ export class MaterializationService {
       where: {
         accountId,
         transponderNumber,
-        status: 'materialized',
+        status: DeclarationStatus.Materialized,
         windowEnd: { gte: new Date() },
       },
     });
@@ -271,7 +272,7 @@ export class MaterializationService {
       where: { id, accountId: ctx.accountId },
     });
     if (!row) throw new NotFoundException('Declaration not found');
-    const ok = await this.cancelRow(ctx, row.id, row.ncqpDeclarationId, 'canceled');
+    const ok = await this.cancelRow(ctx, row.id, row.ncqpDeclarationId, DeclarationStatus.Canceled);
     return { canceled: ok };
   }
 
@@ -284,14 +285,14 @@ export class MaterializationService {
       where: {
         accountId: ctx.accountId,
         transponderNumber,
-        source: 'weekly',
-        status: 'materialized',
+        source: DeclarationSource.Weekly,
+        status: DeclarationStatus.Materialized,
         windowEnd: { gte: new Date() },
       },
     });
     let canceled = 0;
     for (const row of rows) {
-      canceled += (await this.cancelRow(ctx, row.id, row.ncqpDeclarationId, 'canceled')) ? 1 : 0;
+      canceled += (await this.cancelRow(ctx, row.id, row.ncqpDeclarationId, DeclarationStatus.Canceled)) ? 1 : 0;
     }
     return canceled;
   }

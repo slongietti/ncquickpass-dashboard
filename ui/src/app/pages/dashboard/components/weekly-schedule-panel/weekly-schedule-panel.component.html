@@ -1,16 +1,4 @@
-@if (vehicles.length === 0) {
-  <p class="empty">No transponders found on this account.</p>
-} @else {
-  <div class="field">
-    <span class="field-label">Vehicle</span>
-    <app-select
-      [options]="vehicleOptions"
-      [value]="selectedTransponder"
-      (valueChange)="onVehicleChange($event)"
-    />
-  </div>
-
-  @if (loading()) {
+@if (loading()) {
     <p class="empty">Loading…</p>
   } @else {
     <ul class="days">
@@ -110,4 +98,3 @@
     encrypted and used only by the background scheduler —
     <a href="/how-it-works" target="_blank" rel="noopener">how this works</a>.
   </app-password-prompt>
-}
