@@ -1,30 +1,3 @@
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  margin-bottom: 1rem;
-}
-
-.field-label {
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-.enable-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.9rem;
-  margin-bottom: 0.75rem;
-  cursor: pointer;
-
-  input {
-    accent-color: var(--accent);
-    width: 1rem;
-    height: 1rem;
-  }
-}
-
 .hint {
   margin: 0 0 1rem;
   font-size: 0.8rem;
@@ -129,8 +102,23 @@
 
 .drawer-actions {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 0.5rem;
   margin-top: 1.25rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border);
+}
+
+.confirm-clear {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.confirm-text {
+  font-size: 0.82rem;
+  color: var(--text);
 }

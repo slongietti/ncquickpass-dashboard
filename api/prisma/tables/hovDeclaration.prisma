@@ -3,7 +3,8 @@
 model HOVDeclaration {
   id                String   @id @default(cuid())
   accountId         String // TENANT KEY (denormalized for row-level filtering)
-  scheduleId        String
+  scheduleId        String? // null for ad-hoc declarations (no weekly schedule)
+  source            String   @default("weekly") // weekly | adhoc — how it was derived
   transponderNumber String
   windowStart       DateTime // concrete UTC window
   windowEnd         DateTime

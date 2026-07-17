@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { PrismaModule } from './prisma/prisma.module';
 import { NcqpModule } from './endpoints/ncqp/ncqp.module';
 import { AuthModule } from './endpoints/auth/auth.module';
@@ -12,6 +13,7 @@ import { HealthController } from './health.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     NcqpModule,
     AuthModule,

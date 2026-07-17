@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { forkJoin } from 'rxjs';
@@ -12,10 +12,15 @@ import { DeclarationView } from '../../core/models/DeclarationView';
 import { TransactionView } from '../../core/models/TransactionView';
 import { VehicleView } from '../../core/models/VehicleView';
 import { groupIntoTrips, replenishments } from '../../core/trip-grouping';
+import { endOfDay } from '../../core/date-utils';
+import { serverMessage } from '../../core/http-utils';
+import { FutureDeclaration } from '../../core/models/FutureDeclaration';
 import { ActivateRequest, HovStatusComponent } from './components/hov-status/hov-status.component';
 import { TripListComponent } from './components/trip-list/trip-list.component';
 import { AccountSummaryComponent } from './components/account-summary/account-summary.component';
-import { WeeklyScheduleDrawerComponent } from './components/weekly-schedule-drawer/weekly-schedule-drawer.component';
+import { ScheduledDrawerComponent } from './components/scheduled-drawer/scheduled-drawer.component';
+import { PasswordPromptComponent } from '../../shared/password-prompt/password-prompt.component';
+import { NcqpLogoComponent } from '../../shared/ncqp-logo/ncqp-logo.component';
 
 export interface RangeOption {
   label: string;
@@ -40,17 +45,23 @@ const DAY_OPTIONS: RangeOption[] = [
     HovStatusComponent,
     TripListComponent,
     AccountSummaryComponent,
-    WeeklyScheduleDrawerComponent,
+    ScheduledDrawerComponent,
+    PasswordPromptComponent,
+    NcqpLogoComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly hov = inject(HovService);
   private readonly transactionSvc = inject(TransactionService);
   private readonly accountSvc = inject(AccountService);
   private readonly router = inject(Router);
+
+  /** Auto-dismiss timer for the action toast. */
+  private toastTimer: ReturnType<typeof setTimeout> | null = null;
+  private static readonly TOAST_MS = 5000;
 
   readonly dayOptions = DAY_OPTIONS;
   readonly accountId = this.auth.accountId;
@@ -68,10 +79,35 @@ export class DashboardComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly busyTransponder = signal<string | null>(null);
   readonly actionMessage = signal<string | null>(null);
-  readonly scheduleDrawerOpen = signal(false);
+  readonly scheduledDrawerOpen = signal(false);
+  readonly futureDeclarations = signal<FutureDeclaration[]>([]);
+  readonly futureCount = computed(() => this.futureDeclarations().length);
+  readonly futureBusyId = signal<string | null>(null);
+  readonly conflict = signal<{ req: ActivateRequest; declarations: FutureDeclaration[] } | null>(
+    null,
+  );
+  // Ad-hoc future declaration awaiting the password prompt.
+  readonly adhocPending = signal<ActivateRequest | null>(null);
+  readonly adhocBusy = signal(false);
+  readonly adhocPwError = signal<string | null>(null);
 
   ngOnInit(): void {
     this.loadAll();
+    this.refreshFuture();
+  }
+
+  ngOnDestroy(): void {
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+  }
+
+  /** Show a transient action toast that auto-dismisses after a few seconds. */
+  private notify(message: string): void {
+    this.actionMessage.set(message);
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => {
+      this.actionMessage.set(null);
+      this.toastTimer = null;
+    }, DashboardComponent.TOAST_MS);
   }
 
   loadAll(): void {
@@ -112,6 +148,91 @@ export class DashboardComponent implements OnInit {
   onActivate(req: ActivateRequest): void {
     this.busyTransponder.set(req.transponderNumber);
     this.actionMessage.set(null);
+    // Check whether this window overlaps a scheduled declaration first.
+    const start = req.startDateTime ? new Date(req.startDateTime) : new Date();
+    const end = req.endDateTime ? new Date(req.endDateTime) : endOfDay(start);
+    this.hov
+      .checkConflict({
+        transponderNumber: req.transponderNumber,
+        startDateTime: start.toISOString(),
+        endDateTime: end.toISOString(),
+      })
+      .subscribe({
+        next: (conflicts) => {
+          if (conflicts.length > 0) {
+            this.conflict.set({ req, declarations: conflicts });
+            this.busyTransponder.set(null);
+          } else {
+            this.proceedActivate(req);
+          }
+        },
+        error: () => this.proceedActivate(req), // conflict check is best-effort
+      });
+  }
+
+  confirmConflict(): void {
+    const pending = this.conflict();
+    if (!pending) return;
+    const ids = pending.declarations.map((d) => d.id);
+    this.conflict.set(null);
+    this.busyTransponder.set(pending.req.transponderNumber);
+    this.hov.resolveConflict(ids).subscribe({
+      next: () => this.proceedActivate(pending.req),
+      error: (err) => this.handleActionError(err, 'Failed to cancel the scheduled declaration.'),
+    });
+  }
+
+  cancelConflict(): void {
+    this.conflict.set(null);
+    this.busyTransponder.set(null);
+  }
+
+  /** A genuinely future start becomes a scheduled declaration (needs the password);
+   *  a blank or past start activates now. */
+  private proceedActivate(req: ActivateRequest): void {
+    const startsInFuture =
+      !!req.startDateTime && new Date(req.startDateTime).getTime() > Date.now() + 60_000;
+    if (startsInFuture) {
+      this.busyTransponder.set(null);
+      this.adhocPwError.set(null);
+      this.adhocPending.set(req);
+    } else {
+      this.doActivate(req);
+    }
+  }
+
+  confirmAdhocPassword(password: string): void {
+    const pending = this.adhocPending();
+    if (!pending?.startDateTime) return;
+    this.adhocBusy.set(true);
+    this.adhocPwError.set(null);
+    const start = new Date(pending.startDateTime);
+    const end = pending.endDateTime ? new Date(pending.endDateTime) : endOfDay(start);
+    this.hov
+      .scheduleAdhoc(pending.transponderNumber, start.toISOString(), end.toISOString(), password)
+      .subscribe({
+        next: () => {
+          this.adhocBusy.set(false);
+          this.adhocPending.set(null);
+          this.afterHovChange('HOV scheduled.');
+        },
+        error: (err: HttpErrorResponse) => {
+          this.adhocBusy.set(false);
+          this.adhocPwError.set(
+            serverMessage(err) ?? 'Could not schedule that declaration. Please try again.',
+          );
+        },
+      });
+  }
+
+  cancelAdhoc(): void {
+    this.adhocPending.set(null);
+    this.adhocPwError.set(null);
+    this.busyTransponder.set(null);
+  }
+
+  private doActivate(req: ActivateRequest): void {
+    this.busyTransponder.set(req.transponderNumber);
     this.hov.activate(req.transponderNumber, req.endDateTime).subscribe({
       next: () => this.afterHovChange('HOV declaration set.'),
       error: (err) => this.handleActionError(err, 'Failed to set HOV declaration.'),
@@ -128,16 +249,43 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  openSchedule(): void {
-    this.scheduleDrawerOpen.set(true);
+  openScheduled(): void {
+    this.scheduledDrawerOpen.set(true);
   }
 
-  closeSchedule(): void {
-    this.scheduleDrawerOpen.set(false);
+  closeScheduled(): void {
+    this.scheduledDrawerOpen.set(false);
   }
 
   onScheduleSaved(message: string): void {
-    this.actionMessage.set(message);
+    // Weekly save/remove: reflect the message, close the drawer, and refresh the
+    // upcoming list since materialization may have created or dropped declarations.
+    if (message) this.notify(message);
+    this.scheduledDrawerOpen.set(false);
+    this.refreshFuture();
+  }
+
+  onCancelUpcoming(id: string): void {
+    this.futureBusyId.set(id);
+    this.hov.cancelFutureDeclaration(id).subscribe({
+      next: () => {
+        this.futureBusyId.set(null);
+        this.futureDeclarations.update((list) => list.filter((d) => d.id !== id));
+        this.notify('Scheduled declaration canceled.');
+      },
+      error: () => {
+        this.futureBusyId.set(null);
+        this.notify('Could not cancel that declaration. Please try again.');
+      },
+    });
+  }
+
+  /** Load upcoming scheduled declarations for the badge + Upcoming tab. Best-effort. */
+  private refreshFuture(): void {
+    this.hov.getFutureDeclarations().subscribe({
+      next: (list) => this.futureDeclarations.set(list),
+      error: () => this.futureDeclarations.set([]),
+    });
   }
 
   logout(): void {
@@ -148,7 +296,10 @@ export class DashboardComponent implements OnInit {
   }
 
   private afterHovChange(message: string): void {
-    this.actionMessage.set(message);
+    this.notify(message);
+    // Conflict resolution may have superseded scheduled declarations, so keep the
+    // upcoming list/badge in sync alongside the live status.
+    this.refreshFuture();
     this.hov.getStatus().subscribe({
       next: (declarations) => {
         this.declarations.set(declarations);
@@ -161,7 +312,7 @@ export class DashboardComponent implements OnInit {
   private handleActionError(err: HttpErrorResponse, message: string): void {
     this.busyTransponder.set(null);
     if (this.redirectIfUnauthorized(err)) return;
-    this.actionMessage.set(message);
+    this.notify(message);
   }
 
   private handleError(err: HttpErrorResponse, message: string): void {
@@ -178,3 +329,4 @@ export class DashboardComponent implements OnInit {
     return false;
   }
 }
+

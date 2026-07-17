@@ -1,13 +1,45 @@
 .card-head-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
+}
+
+.summary {
+  margin: 0.2rem 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.head-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
 }
 
 .schedule-btn {
   font-size: 0.82rem;
   padding: 0.4rem 0.7rem;
+}
+
+.status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-end;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.cancel-mini {
+  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
 }
 
 .vehicles {
@@ -93,7 +125,8 @@
   border-top: 1px dashed var(--border);
 
   .btn-primary,
-  .btn-danger {
+  .btn-danger,
+  .btn-ghost {
     padding: 0.4rem 0.7rem;
     font-size: 0.82rem;
   }
@@ -104,6 +137,20 @@
   gap: 0.2rem;
   font-size: 0.75rem;
   color: var(--muted);
+}
+
+.add-another {
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.7rem;
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
 }
 
 .retained-toggle {

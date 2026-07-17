@@ -1,0 +1,59 @@
+<app-drawer [open]="open" title="Scheduled" (close)="close.emit()">
+  @if (vehicles.length === 0) {
+    <p class="empty">No transponders found on this account.</p>
+  } @else {
+    <div class="veh-select">
+      <span class="veh-label">Vehicle</span>
+      <app-select
+        [options]="vehicleOptions"
+        [value]="selectedTransponder()"
+        (valueChange)="onVehicleChange($event)"
+      />
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button
+        type="button"
+        class="tab"
+        role="tab"
+        [class.active]="tab() === 'weekly'"
+        [attr.aria-selected]="tab() === 'weekly'"
+        (click)="setTab('weekly')"
+      >
+        Weekly
+      </button>
+      <button
+        type="button"
+        class="tab"
+        role="tab"
+        [class.active]="tab() === 'upcoming'"
+        [attr.aria-selected]="tab() === 'upcoming'"
+        (click)="setTab('upcoming')"
+      >
+        Upcoming
+        @if (filteredUpcoming.length > 0) {
+          <span class="count-badge" [attr.aria-label]="filteredUpcoming.length + ' upcoming'">
+            {{ filteredUpcoming.length }}
+          </span>
+        }
+      </button>
+    </div>
+
+    <div class="tab-panel" [hidden]="tab() !== 'weekly'">
+      <app-weekly-schedule-panel
+        [active]="open && tab() === 'weekly'"
+        [transponder]="selectedTransponder()"
+        (saved)="saved.emit($event)"
+      />
+    </div>
+
+    <div class="tab-panel" [hidden]="tab() !== 'upcoming'">
+      <app-upcoming-declarations-panel
+        [declarations]="filteredUpcoming"
+        [vehicles]="vehicles"
+        [busyId]="busyId"
+        (cancel)="cancelUpcoming.emit($event)"
+      />
+    </div>
+  }
+</app-drawer>

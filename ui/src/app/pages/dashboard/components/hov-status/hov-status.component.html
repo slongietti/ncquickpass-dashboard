@@ -1,7 +1,17 @@
 <section class="card">
   <header class="card-head card-head-row">
-    <h2>HOV Status</h2>
-    <button class="btn-ghost schedule-btn" (click)="openSchedule.emit()">Weekly Schedule</button>
+    <div>
+      <h2>HOV Status</h2>
+      <p class="summary">{{ summary }}</p>
+    </div>
+    <div class="head-actions">
+      <button class="btn-ghost schedule-btn" (click)="openScheduled.emit()">
+        Scheduled
+        @if (upcomingCount > 0) {
+          <span class="count-badge">{{ upcomingCount }}</span>
+        }
+      </button>
+    </div>
   </header>
 
   @if (vehicles.length === 0) {
@@ -19,60 +29,100 @@
           </div>
         </div>
 
-        @if (declarationFor(v.transponderNumber); as decl) {
-          <div class="status">
-            @if (isPending(decl)) {
-              <span class="badge badge-pending">Pending</span>
-              <span class="until">active in {{ countdown(decl) }}</span>
-              @if (decl.endDateTime) {
-                <span class="until">until {{ decl.endDateTime | date: 'MMM d, h:mm a' }}</span>
+        @if (declarationsFor(v.transponderNumber); as decls) {
+          @if (decls.length > 0) {
+            <div class="status status-list">
+              @for (decl of decls; track decl.declarationId) {
+                <div class="status-row">
+                  @if (isPending(decl)) {
+                    <span class="badge badge-pending">Pending</span>
+                    <span class="until">active in {{ countdown(decl) }}</span>
+                  } @else {
+                    <span class="badge badge-active">Active</span>
+                  }
+                  @if (decl.endDateTime) {
+                    <span class="until">until {{ decl.endDateTime | date: 'MMM d, h:mm a' }}</span>
+                  }
+                  <button
+                    class="btn-danger cancel-mini"
+                    (click)="onCancel(decl.declarationId)"
+                    [disabled]="busyTransponder === v.transponderNumber"
+                  >
+                    Cancel
+                  </button>
+                </div>
               }
-            } @else {
-              <span class="badge badge-active">Active</span>
-              @if (decl.endDateTime) {
-                <span class="until">until {{ decl.endDateTime | date: 'MMM d, h:mm a' }}</span>
-              }
-            }
-          </div>
-        } @else {
-          <div class="status">
-            <span class="badge badge-idle">No active HOV</span>
-          </div>
-        }
-
-        <div class="actions">
-          @if (declarationFor(v.transponderNumber); as decl) {
-            <button
-              class="btn-danger"
-              (click)="onCancel(decl.declarationId)"
-              [disabled]="busyTransponder === v.transponderNumber"
-            >
-              Cancel HOV
-            </button>
-          } @else {
-            <label class="end-picker">
-              <span>HOV end</span>
-              <input
-                type="text"
-                class="date-field"
-                placeholder="Select date &amp; time"
-                appDateTimePicker
-                (valueChange)="endInputs[v.transponderNumber] = $event ?? ''"
-                [disabled]="busyTransponder === v.transponderNumber"
+            </div>
+            @if (showAdd[v.transponderNumber]) {
+              <ng-container
+                [ngTemplateOutlet]="addForm"
+                [ngTemplateOutletContext]="{ $implicit: v.transponderNumber }"
               />
-            </label>
-            <button
-              class="btn-primary"
-              (click)="onSetEnd(v.transponderNumber)"
-              [disabled]="busyTransponder === v.transponderNumber"
-            >
-              Set HOV end
-            </button>
+            } @else {
+              <div class="actions">
+                <button
+                  type="button"
+                  class="add-another"
+                  (click)="showAdd[v.transponderNumber] = true"
+                  [disabled]="busyTransponder === v.transponderNumber"
+                >
+                  + Add another HOV declaration
+                </button>
+              </div>
+            }
+          } @else {
+            <div class="status">
+              <span class="badge badge-idle">No active HOV</span>
+            </div>
+            <ng-container
+              [ngTemplateOutlet]="addForm"
+              [ngTemplateOutletContext]="{ $implicit: v.transponderNumber }"
+            />
           }
-        </div>
+        }
       </li>
     }
   </ul>
+
+  <ng-template #addForm let-t>
+    <div class="actions">
+      <label class="end-picker">
+        <span>HOV start</span>
+        <input
+          type="text"
+          class="date-field"
+          placeholder="Optional — starts now"
+          appDateTimePicker
+          #startPicker="appDateTimePicker"
+          (valueChange)="startInputs[t] = $event ?? ''"
+          [disabled]="busyTransponder === t"
+        />
+      </label>
+      <label class="end-picker">
+        <span>HOV end</span>
+        <input
+          type="text"
+          class="date-field"
+          placeholder="Select date &amp; time"
+          appDateTimePicker
+          #endPicker="appDateTimePicker"
+          (valueChange)="endInputs[t] = $event ?? ''"
+          [disabled]="busyTransponder === t"
+        />
+      </label>
+      <button class="btn-primary" (click)="onSetEnd(t)" [disabled]="busyTransponder === t">
+        Confirm
+      </button>
+      <button
+        type="button"
+        class="btn-ghost"
+        (click)="startPicker.clear(); endPicker.clear(); startInputs[t] = ''; endInputs[t] = ''"
+        [disabled]="busyTransponder === t"
+      >
+        Clear
+      </button>
+    </div>
+  </ng-template>
 
   @if (retainedVehicles.length > 0) {
     <button class="retained-toggle" (click)="toggleRetained()" [attr.aria-expanded]="showRetained">

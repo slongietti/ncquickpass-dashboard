@@ -1,0 +1,100 @@
+@if (loading()) {
+    <p class="empty">Loading…</p>
+  } @else {
+    <ul class="days">
+      @for (day of dayEdits; track day.dayOfWeek) {
+        <li class="day">
+          <div class="day-head">
+            <span class="day-name">{{ day.label }}</span>
+            <label class="allday">
+              <input
+                type="checkbox"
+                [ngModel]="day.allDay"
+                (ngModelChange)="day.allDay = $event; toggleAllDay(day)"
+              />
+              <span>All day</span>
+            </label>
+          </div>
+
+          @if (!day.allDay) {
+            <div class="ranges">
+              @for (range of day.ranges; track $index) {
+                <div class="range">
+                  <input
+                    type="text"
+                    class="time-field"
+                    appTimePicker
+                    [value]="range.start"
+                    (valueChange)="range.start = $event"
+                  />
+                  <span class="dash">–</span>
+                  <input
+                    type="text"
+                    class="time-field"
+                    appTimePicker
+                    [value]="range.end"
+                    (valueChange)="range.end = $event"
+                  />
+                  <button
+                    type="button"
+                    class="range-remove"
+                    (click)="removeRange(day, $index)"
+                    aria-label="Remove time range"
+                  >
+                    ✕
+                  </button>
+                </div>
+              }
+              <button type="button" class="add-range" (click)="addRange(day)">
+                + Add time range
+              </button>
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  }
+
+  @if (error(); as err) {
+    <div class="alert" role="alert">{{ err }}</div>
+  }
+
+  <div class="drawer-actions">
+    <button type="button" class="btn-primary" (click)="save()" [disabled]="saving()">
+      {{ saving() ? 'Saving…' : 'Save schedule' }}
+    </button>
+    @if (confirmingClear()) {
+      <div class="confirm-clear" role="alertdialog">
+        <span class="confirm-text">Are you sure?</span>
+        <button type="button" class="btn-danger" (click)="confirmClear()" [disabled]="saving()">
+          Clear
+        </button>
+        <button type="button" class="btn-ghost" (click)="cancelClear()" [disabled]="saving()">
+          Cancel
+        </button>
+      </div>
+    } @else {
+      <button
+        type="button"
+        class="btn-danger"
+        (click)="startClear()"
+        [disabled]="saving() || !scheduleExists"
+      >
+        Clear
+      </button>
+    }
+  </div>
+
+  <app-password-prompt
+    [open]="passwordPromptOpen()"
+    [busy]="saving()"
+    [error]="pwError()"
+    title="Enable automatic scheduling"
+    confirmLabel="Enable"
+    (confirm)="onPasswordConfirm($event)"
+    (cancel)="cancelPassword()"
+  >
+    Enter your NC Quick Pass password so declarations can be created on your behalf. It's stored
+    encrypted and used only by the background scheduler —
+    <a href="/how-it-works" target="_blank" rel="noopener">how this works</a>.
+  </app-password-prompt>

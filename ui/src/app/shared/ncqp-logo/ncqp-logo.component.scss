@@ -1,0 +1,18 @@
+:host {
+  display: inline-flex;
+}
+
+.ncqp-logo-link {
+  display: inline-flex;
+  align-items: center;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+.ncqp-logo {
+  width: auto;
+  display: block;
+}

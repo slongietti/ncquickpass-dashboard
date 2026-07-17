@@ -7,5 +7,6 @@ import { AuthService } from './auth.service';
   imports: [NcqpModule],
   controllers: [AuthController],
   providers: [AuthService],
+  exports: [AuthService],
 })
 export class AuthModule {}

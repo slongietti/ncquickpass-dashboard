@@ -1,0 +1,36 @@
+@if (declarations.length === 0) {
+  <p class="empty">No upcoming scheduled declarations.</p>
+} @else {
+  <ul class="future-list">
+    @for (d of declarations; track d.id) {
+      <li class="future-item">
+        <div class="future-info">
+          <div class="future-when">
+            {{ d.windowStart | date: 'EEE, MMM d · h:mm a' }} –
+            @if (sameDay(d.windowStart, d.windowEnd)) {
+              {{ d.windowEnd | date: 'h:mm a' }}
+            } @else {
+              {{ d.windowEnd | date: 'EEE, MMM d · h:mm a' }}
+            }
+          </div>
+          <div class="future-veh">
+            {{ vehicleName(d.transponderNumber) }} · #{{ d.transponderNumber }}
+          </div>
+          <div class="future-meta">
+            <span class="source-chip" [class.adhoc]="d.source === 'adhoc'">
+              {{ d.source === 'adhoc' ? 'Ad-hoc' : 'Weekly' }}
+            </span>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="btn-danger cancel-btn"
+          (click)="cancel.emit(d.id)"
+          [disabled]="busyId === d.id"
+        >
+          Cancel
+        </button>
+      </li>
+    }
+  </ul>
+}

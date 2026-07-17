@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import type { Prisma } from '../../generated/prisma/client';
 import { PutScheduleDto } from '../../models/schedule/PutScheduleDto';
+import { parseRanges } from './schedule-window';
 
 const DEFAULT_TIMEZONE = 'America/New_York';
 
@@ -109,6 +110,20 @@ export class ScheduleService {
     return { deleted: result.count > 0 };
   }
 
+  /** Whether the tenant has any schedule at all (drives vault teardown on delete). */
+  async hasAnySchedule(accountId: string): Promise<boolean> {
+    return (await this.prisma.weeklySchedule.count({ where: { accountId } })) > 0;
+  }
+
+  /** Find a schedule's id for a transponder, if it exists. */
+  async findScheduleId(accountId: string, transponderNumber: string): Promise<string | null> {
+    const row = await this.prisma.weeklySchedule.findUnique({
+      where: { accountId_transponderNumber: { accountId, transponderNumber } },
+      select: { id: true },
+    });
+    return row?.id ?? null;
+  }
+
   private static requireTransponder(value: string | undefined): string {
     const transponder = (value ?? '').trim();
     if (!transponder) throw new BadRequestException('transponder is required');
@@ -135,12 +150,6 @@ export class ScheduleService {
   }
 
   private static asRanges(value: unknown): ScheduleTimeRange[] {
-    if (!Array.isArray(value)) return [];
-    return value
-      .filter(
-        (r): r is ScheduleTimeRange =>
-          !!r && typeof r === 'object' && 'startMinute' in r && 'endMinute' in r,
-      )
-      .map((r) => ({ startMinute: Number(r.startMinute), endMinute: Number(r.endMinute) }));
+    return parseRanges(value);
   }
 }

@@ -1,0 +1,40 @@
+.veh-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+.veh-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 0.5rem 0.75rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: -1px;
+
+  &:hover:not(.active) {
+    color: var(--text);
+  }
+
+  &.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+}

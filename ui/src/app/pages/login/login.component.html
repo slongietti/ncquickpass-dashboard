@@ -1,6 +1,6 @@
 <div class="login-wrap">
   <form class="login-card" (ngSubmit)="submit()">
-    <img class="login-logo" src="assets/ncta-logo.svg" alt="NC Quick Pass" />
+    <app-ncqp-logo class="login-logo" [height]="40" />
     <p class="subtitle">Dashboard</p>
 
     @if (error(); as err) {
@@ -36,8 +36,8 @@
     </button>
 
     <p class="fineprint">
-      Your credentials are never saved. They are utilized by the backend to proxy api calls to
-      ncquickpass.com on your behalf.
+      By default your credentials are not stored, unless you opt into background processes that use
+      your encrypted credentials. <a href="/how-it-works" target="_blank" rel="noopener">Read more</a>.
     </p>
 
     <p class="built-by">

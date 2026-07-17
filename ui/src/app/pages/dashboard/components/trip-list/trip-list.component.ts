@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Trip } from '../../../../core/models/Trip';
+import { isSameDay } from '../../../../core/date-utils';
 import { SelectComponent, SelectOption } from '../../../../shared/select/select.component';
 
 export interface RangeOption {
@@ -40,6 +41,16 @@ export class TripListComponent {
       : this.trips.filter((t) => t.highway === this.selectedHighway);
   }
 
+  /** Total spend across the currently visible trips (respects range + highway filter). */
+  get visibleTotal(): number {
+    return this.visibleTrips.reduce((sum, t) => sum + t.total, 0);
+  }
+
+  /** A $0 toll/trip (e.g. an HOV-declared I-77 trip) is shown as "No Cost". */
+  isNoCost(amount: number | null | undefined): boolean {
+    return !amount;
+  }
+
   setFilter(highway: string): void {
     this.selectedHighway = highway;
     this.expanded.clear();
@@ -59,6 +70,6 @@ export class TripListComponent {
 
   /** Same trip within a single day shows one time span; multi-day shows both dates. */
   spansSingleDay(trip: Trip): boolean {
-    return new Date(trip.start).toDateString() === new Date(trip.end).toDateString();
+    return isSameDay(trip.start, trip.end);
   }
 }

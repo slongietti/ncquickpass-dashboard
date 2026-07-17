@@ -30,4 +30,14 @@ export class PutScheduleDto {
   @ValidateNested({ each: true })
   @Type(() => ScheduleDayDto)
   days!: ScheduleDayDto[];
+
+  /**
+   * NCQP password, sent only when enabling automatic scheduling for the first
+   * time (no credential on file yet). Used once to arm the encrypted vault so
+   * the background job can re-authenticate; never persisted in plaintext.
+   */
+  @IsOptional()
+  @IsString()
+  @MaxLength(256)
+  password?: string;
 }

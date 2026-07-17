@@ -9,12 +9,18 @@ import type { Instance } from 'flatpickr/dist/types/instance';
 @Directive({
   selector: '[appDateTimePicker]',
   standalone: true,
+  exportAs: 'appDateTimePicker',
 })
 export class DateTimePickerDirective implements OnInit, OnDestroy {
   @Output() valueChange = new EventEmitter<string | undefined>();
 
   private readonly host = inject<ElementRef<HTMLInputElement>>(ElementRef);
   private picker?: Instance;
+
+  /** Reset the picker (fires onChange, so bound models are cleared too). */
+  clear(): void {
+    this.picker?.clear();
+  }
 
   ngOnInit(): void {
     this.picker = flatpickr(this.host.nativeElement, {

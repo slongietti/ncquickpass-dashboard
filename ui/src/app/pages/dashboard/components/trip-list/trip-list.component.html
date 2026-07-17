@@ -6,15 +6,26 @@
         Tolls grouped into trips (tolls within 5 minutes of each other on the same highway).
       </p>
     </div>
-    <label class="range">
-      <span>Range</span>
-      <app-select
-        [options]="rangeOptions"
-        [value]="days"
-        [disabled]="loading"
-        (valueChange)="daysChange.emit(+$event)"
-      />
-    </label>
+    <div class="head-meta">
+      <label class="range">
+        <span>Range</span>
+        <app-select
+          [options]="rangeOptions"
+          [value]="days"
+          [disabled]="loading"
+          (valueChange)="daysChange.emit(+$event)"
+        />
+      </label>
+      <div class="range-total">
+        <span class="range-total-label">
+          {{ selectedHighway === 'all' ? 'All highways' : selectedHighway }} total
+        </span>
+        @if (isNoCost(visibleTotal)) {
+          <span class="no-cost-chip">No Cost</span>
+        }
+        <span class="range-total-amt">{{ visibleTotal | currency }}</span>
+      </div>
+    </div>
   </header>
 
   @if (highways.length > 1) {
@@ -60,6 +71,9 @@
             <span class="count">
               {{ trip.transactions.length }} toll{{ trip.transactions.length === 1 ? '' : 's' }}
             </span>
+            @if (isNoCost(trip.total)) {
+              <span class="no-cost-chip">No Cost</span>
+            }
             <span class="total">{{ trip.total | currency }}</span>
           </span>
         </button>
@@ -70,7 +84,12 @@
               <li class="toll">
                 <span class="toll-loc">{{ t.exitLocation }}</span>
                 <span class="toll-time">{{ t.transactionDate | date: 'h:mm a' }}</span>
-                <span class="toll-amt">{{ t.debitAmount | currency }}</span>
+                <span class="toll-amt">
+                  @if (isNoCost(t.debitAmount)) {
+                    <span class="no-cost-chip">No Cost</span>
+                  }
+                  {{ t.debitAmount | currency }}
+                </span>
               </li>
             }
           </ul>

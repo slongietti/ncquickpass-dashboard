@@ -22,12 +22,50 @@
 .head-main {
   min-width: 0;
 }
+.head-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.4rem;
+  flex: 0 0 auto;
+}
 .range {
   display: flex;
   align-items: center;
   gap: 0.4rem;
   font-size: 0.78rem;
   color: var(--muted);
+  white-space: nowrap;
+}
+.range-total {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+.range-total-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.range-total-amt {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Green "No Cost" pill, distinct from the grey/purple highway chip. */
+.no-cost-chip {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: #e6f4ea;
+  color: #1e7e34;
   white-space: nowrap;
 }
 
@@ -176,4 +214,8 @@
   font-variant-numeric: tabular-nums;
   min-width: 4rem;
   text-align: right;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
 }

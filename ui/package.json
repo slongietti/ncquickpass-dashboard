@@ -1,6 +1,6 @@
 {
   "name": "ncquickpass-dashboard-ui",
-  "version": "0.1.0",
+  "version": "0.4.1",
   "scripts": {
     "ng": "ng",
     "start": "ng serve --proxy-config proxy.conf.json",
@@ -19,6 +19,7 @@
     "@angular/platform-browser-dynamic": "^17.3.0",
     "@angular/router": "^17.3.0",
     "flatpickr": "^4.6.13",
+    "mermaid": "^11.16.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.3"

@@ -1,9 +1,10 @@
 import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { CookieOptions, Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from '../../models/auth/LoginDto';
 import { SESSION_COOKIE, isSessionValid, parseSession } from './session/session';
+import { sessionCookieOptions, writeSessionCookie } from './session/session-cookie';
 
 @Controller('auth')
 export class AuthController {
@@ -18,16 +19,13 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ authenticated: true; accountId: string }> {
     const session = await this.auth.login(dto.username, dto.password);
-    res.cookie(SESSION_COOKIE, JSON.stringify(session), {
-      ...this.cookieOptions(),
-      maxAge: Math.max(0, session.exp - Date.now()),
-    });
+    writeSessionCookie(res, session, this.secure());
     return { authenticated: true, accountId: session.accountId };
   }
 
   @Post('logout')
   logout(@Res({ passthrough: true }) res: Response): { authenticated: false } {
-    res.clearCookie(SESSION_COOKIE, this.cookieOptions());
+    res.clearCookie(SESSION_COOKIE, sessionCookieOptions(this.secure()));
     return { authenticated: false };
   }
 
@@ -40,13 +38,7 @@ export class AuthController {
     return { authenticated: false };
   }
 
-  private cookieOptions(): CookieOptions {
-    return {
-      httpOnly: true,
-      signed: true,
-      sameSite: 'lax',
-      secure: this.config.get<string>('COOKIE_SECURE', 'false') === 'true',
-      path: '/',
-    };
+  private secure(): boolean {
+    return this.config.get<string>('COOKIE_SECURE', 'false') === 'true';
   }
 }
