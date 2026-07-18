@@ -18,6 +18,9 @@ services:
       POSTGRES_USER: ncquickpass
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev-only-insecure-password}
       POSTGRES_DB: ncquickpass
+    ports:
+      # Published so `npm run start:dev` on the host can reach it at localhost:5432.
+      - '5432:5432'
     volumes:
       - ncquickpass-data:/var/lib/postgresql/data
     healthcheck:

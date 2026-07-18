@@ -68,14 +68,19 @@ possible here — which is exactly why the implementation is open source and aud
 
 ## Running locally
 
-Prerequisites: Node 20+ and npm.
+Prerequisites: Node 22+, npm, and a Postgres database. The easiest Postgres is the
+compose `db` service (published on `localhost:5432`); `api/.env.example` already
+points `DATABASE_URL` at it.
 
 ```bash
+# 0. Start a local Postgres (or point DATABASE_URL at your own)
+docker compose up -d db
+
 # 1. API (BFF) — http://localhost:3000
 cd api
-cp .env.example .env        # adjust if needed
+cp .env.example .env        # DATABASE_URL already targets the compose db
 npm install
-npm run start:dev
+npm run start:dev           # applies migrations, then serves
 
 # 2. UI (SPA) — http://localhost:4200  (proxies /api → :3000)
 cd ui
@@ -87,27 +92,50 @@ Then open http://localhost:4200 and log in with your NC Quick Pass credentials.
 
 ## Running with Docker
 
-The whole stack ships as two containers. The frontend's nginx serves the built SPA
-**and** reverse-proxies `/api` to the BFF, so the browser talks to a single origin
-(the HttpOnly cookie stays same-site and there's no CORS to configure).
+The whole stack ships as three containers: Postgres (`db`), the NestJS BFF (`bff`),
+and nginx (`web`). The `web` container serves the built SPA **and** reverse-proxies
+`/api` to the BFF, so the browser talks to a single origin (the HttpOnly cookie
+stays same-site and there's no CORS to configure).
 
 ```bash
 docker compose up --build
 # open http://localhost:8080
 ```
 
-Only the `web` container is published (`:8080`); the BFF is reachable only on the
-internal compose network. For anything beyond local use, set a strong cookie secret
+Only the `web` container is published (`:8080`); the BFF and DB are reachable only on
+the internal compose network. For anything beyond local use, set a strong cookie secret
 (and enable Secure cookies behind HTTPS):
 
 ```bash
 COOKIE_SECRET=$(openssl rand -hex 32) COOKIE_SECURE=true docker compose up --build
 ```
 
+> **Upgrading from an older SQLite build?** The `ncquickpass-data` volume now holds
+> Postgres data — Postgres won't initialize over the old SQLite file. Reset it first:
+> `docker compose down -v && docker compose up --build`.
+
 | Service | Image base    | Role                                              |
 | ------- | ------------- | ------------------------------------------------- |
-| `web`   | `nginx`       | Serves the Angular SPA + proxies `/api` → `bff`   |
+| `db`    | `postgres`    | Persistent Postgres database (not published)      |
 | `bff`   | `node`        | NestJS backend-for-frontend (not published)       |
+| `web`   | `nginx`       | Serves the Angular SPA + proxies `/api` → `bff`   |
+
+## Deployment
+
+Production runs on AWS as a **single Lambda container** (the NestJS API also serves
+the Angular SPA, same-origin) behind **CloudFront**, with **Neon** (serverless
+Postgres) as the database and **EventBridge Scheduler** driving the daily reconcile.
+Live at **https://ncquickpass.go-volare.com**.
+
+CI/CD (`.github/workflows/`):
+
+- **Push to `main`** → `build.yml` runs tests, builds the combined image to ECR, and
+  drafts a GitHub Release. Nothing deploys.
+- **Publish that Release** → `release.yml` applies pending Prisma migrations, syncs the
+  `DATABASE_URL` secret onto the Lambda, deploys the released image, and promotes `:latest`.
+
+Full one-time AWS bootstrap (ECR, Lambda, OIDC role, CloudFront, KMS, EventBridge,
+Neon) is in [`docs/deployment.md`](./docs/deployment.md).
 
 ## Project layout
 
