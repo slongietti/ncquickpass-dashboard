@@ -27,11 +27,15 @@ hand.** After that, `main` push → image → draft release → publish release 
 ## 0. Prerequisites
 
 - AWS account with admin access; `aws` CLI configured; region `us-east-1`.
-- The Neon project (already created). Grab **two** connection strings from the Neon
-  console → Connect:
-  - **Pooled** (has `-pooler` in the host) → the app's runtime `DATABASE_URL`.
-  - **Direct** (no `-pooler`) → migrations (`DATABASE_URL` in the `production` GH Environment).
-- `go-volare.com` hosted zone in Route 53 (same as `fishon.go-volare.com`).
+- The Neon project (already created). Grab the **pooled** connection string (has
+  `-pooler` in the host) from the Neon console → Connect. On Prisma 7 this single
+  pooled URL serves both `migrate deploy` and the app runtime, so it's the one
+  value stored as the repo secret `DATABASE_URL` (CI applies it to the Lambda —
+  see §9). Strip `channel_binding=require` (the `pg` driver doesn't do SCRAM
+  channel binding); keep `sslmode=require`. If migrations ever hit the PgBouncer
+  "prepared statement s0 already exists" error, use the **direct** (non-`-pooler`)
+  URL instead.
+- `go-volare.com` DNS is on **Cloudflare** (not Route 53).
 
 Set shell vars used below:
 
@@ -142,6 +146,11 @@ aws lambda update-function-configuration --function-name "$FUNCTION" --region "$
 ```
 
 > Leave `CORS_ORIGIN` unset — the SPA is same-origin with the API, so CORS stays off.
+>
+> `DATABASE_URL` shown here is the initial bootstrap value; thereafter `release.yml`'s
+> **sync-env** job overwrites it on each release from the `production` GH secret
+> (merge-preserving the other vars), so rotate the DB password by editing that one
+> secret — never the console.
 
 Enable a **Function URL** (CloudFront is the only caller; keep it as the origin):
 
@@ -194,8 +203,13 @@ aws scheduler create-schedule \
 ## 9. GitHub configuration (once)
 
 - **Secret `OIDC_AWS_ROLE_ARN`** (org or repo) — from step 4.
-- **Environment `production`** → secret **`DATABASE_URL`** = Neon **direct** string
-  (used only by the release `db-deploy` migration job).
+- **Repo secret `DATABASE_URL`** = Neon **pooled** string (`…-pooler…?sslmode=require`,
+  no `channel_binding`). Used by both `db-deploy` (migrations) and `sync-env` (which
+  writes it onto the Lambda). A repo/org secret, not an environment secret — the
+  reusable workflows receive it by explicit input, which resolves at repo/org scope
+  (a GitHub environment secret would not reach them). This is the single place you
+  edit the DB credential; CI keeps the function in sync, so a rotation is: update
+  this secret → publish a release.
 - Branch protection on `main` is already enforced (PR + no direct pushes).
 
 ---
@@ -205,7 +219,8 @@ aws scheduler create-schedule \
 1. Merge a PR to `main` → `build.yml` runs tests, pushes `ncquickpass:0.<minor>.<run#>`
    to ECR, and drafts a GitHub Release.
 2. Publish that Release → `release.yml`:
-   - `db-deploy` applies pending Prisma migrations to Neon (direct URL),
+   - `db-deploy` applies pending Prisma migrations to Neon,
+   - `sync-env` writes `DATABASE_URL` from the `production` secret onto the Lambda,
    - `deploy` points the Lambda at the released image tag,
    - `promote-latest` retags that image `:latest`.
 3. CloudFront serves the updated Lambda at `https://ncquickpass.go-volare.com`.

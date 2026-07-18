@@ -15,8 +15,11 @@ permissions:
 jobs:
   # Apply pending Prisma migrations to Neon before the new code goes live, via
   # the shared reusable workflow. Idempotent (`migrate deploy` applies only
-  # pending migrations, never drops data). DATABASE_URL comes from the
-  # 'production' Environment and should be Neon's DIRECT (non-pooled) string.
+  # pending migrations, never drops data). DATABASE_URL is the repo-level secret
+  # (single source, reused by sync-env below). On Prisma 7 a single Neon POOLED
+  # string works for both `migrate deploy` and the app runtime. (If migrations
+  # ever hit the PgBouncer "prepared statement s0 already exists" error, switch
+  # this secret to Neon's direct URL.)
   db-deploy:
     uses: Volare-Consulting-Software/.github/.github/workflows/prisma-deploy.yml@main
     with:
@@ -26,9 +29,28 @@ jobs:
     secrets:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
 
+  # Push DATABASE_URL from the repo secret onto the Lambda's environment via the
+  # shared reusable workflow (merge-preserving the function's other vars), so the
+  # credential lives in one place you edit (the GitHub secret) and CI keeps the
+  # function in sync — no manual console edits, no drift when it's rotated.
+  sync-env:
+    needs: db-deploy
+    uses: Volare-Consulting-Software/.github/.github/workflows/set-lambda-env-var.yml@main
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      function-name: ncquickpass
+      var-name: DATABASE_URL
+      aws-region: us-east-1
+      environment-name: production
+    secrets:
+      var-value: ${{ secrets.DATABASE_URL }}
+      OIDC_AWS_ROLE_ARN: ${{ secrets.OIDC_AWS_ROLE_ARN }}
+
   # Update the Lambda function to the released image tag.
   deploy:
-    needs: db-deploy
+    needs: sync-env
     uses: Volare-Consulting-Software/.github/.github/workflows/deploy-aws-lambda.yml@main
     permissions:
       contents: read
