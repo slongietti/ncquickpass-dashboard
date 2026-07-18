@@ -1,0 +1,14 @@
+name: cancel-on-close
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  actions: write
+
+jobs:
+  cancel:
+    uses: Volare-Consulting-Software/.github/.github/workflows/cancel-on-close.yml@main
+    with:
+      workflow-file: build.yml

@@ -1,0 +1,58 @@
+name: release
+
+# Runs when a GitHub Release is published. Applies that release's pending Prisma
+# migrations to Neon, points the Lambda at the released image, then promotes it
+# to :latest. Kept separate from build.yml so the build pipeline stays build-only.
+
+on:
+  release:
+    types: [released]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  # Apply pending Prisma migrations to Neon before the new code goes live, via
+  # the shared reusable workflow. Idempotent (`migrate deploy` applies only
+  # pending migrations, never drops data). DATABASE_URL comes from the
+  # 'production' Environment and should be Neon's DIRECT (non-pooled) string.
+  db-deploy:
+    uses: Volare-Consulting-Software/.github/.github/workflows/prisma-deploy.yml@main
+    with:
+      working-directory: api
+      checkout-ref: ${{ github.event.release.tag_name }}
+      environment-name: production
+    secrets:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+  # Update the Lambda function to the released image tag.
+  deploy:
+    needs: db-deploy
+    uses: Volare-Consulting-Software/.github/.github/workflows/deploy-aws-lambda.yml@main
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      function-name: ncquickpass
+      image-name: ncquickpass
+      image-tag: ${{ github.event.release.tag_name }}
+      aws-region: us-east-1
+    secrets:
+      OIDC_AWS_ROLE_ARN: ${{ secrets.OIDC_AWS_ROLE_ARN }}
+
+  # Registry-side retag the released version image to :latest (no rebuild).
+  promote-latest:
+    needs: deploy
+    uses: Volare-Consulting-Software/.github/.github/workflows/push-container-image.yml@main
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      registry: ecr
+      aws-region: us-east-1
+      image-name: ncquickpass
+      source-tag: ${{ github.event.release.tag_name }}
+      dest-tags: latest
+    secrets:
+      OIDC_AWS_ROLE_ARN: ${{ secrets.OIDC_AWS_ROLE_ARN }}

@@ -1,0 +1,75 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  # Unit tests + production builds. `ng test` is browser-based, so UI signal here
+  # is the production build (the image job rebuilds the SPA identically).
+  test:
+    if: ${{ github.event.pull_request.draft != true }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: API — install
+        working-directory: api
+        run: npm ci
+      - name: API — unit tests
+        working-directory: api
+        run: npm test
+      - name: API — build (typecheck)
+        working-directory: api
+        run: npm run build
+
+      - name: UI — install
+        working-directory: ui
+        run: npm ci
+      - name: UI — build
+        working-directory: ui
+        run: npm run build
+
+  # Build + push the combined image to ECR on main pushes only (PRs never push).
+  # Publishes the immutable 0.<minor>.<run_number> tag; :latest moves on release.
+  image:
+    needs: test
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    uses: Volare-Consulting-Software/.github/.github/workflows/push-container-image.yml@main
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      registry: ecr
+      aws-region: us-east-1
+      image-name: ncquickpass
+      # MAJOR.MINOR from api/package.json seeds the version tag base.
+      version-package-json: api/package.json
+      dockerfile: ./Dockerfile
+      build-context: .
+      include-version-tag: true
+      include-latest-tag: false
+    secrets:
+      OIDC_AWS_ROLE_ARN: ${{ secrets.OIDC_AWS_ROLE_ARN }}
+
+  # Draft the GitHub Release an operator promotes to trigger release.yml.
+  release:
+    needs: image
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    uses: Volare-Consulting-Software/.github/.github/workflows/draft-release.yml@main
+    permissions:
+      contents: write
+    with:
+      tag-version: ${{ needs.image.outputs.image-tag-version }}
+      image-ref: ${{ needs.image.outputs.image-ref }}

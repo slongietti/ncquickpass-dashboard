@@ -1,0 +1,16 @@
+# Build context for the combined Lambda image (repo root).
+**/node_modules
+**/dist
+**/.angular
+**/coverage
+**/*.log
+**/.env
+**/.env.*
+!**/.env.example
+api/src/generated
+api/test
+**/*.db
+**/*.db-journal
+.git
+.github
+*.md

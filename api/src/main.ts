@@ -13,10 +13,14 @@ async function bootstrap() {
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
   );
-  app.enableCors({
-    origin: config.get<string>('CORS_ORIGIN', 'http://localhost:4200'),
-    credentials: true,
-  });
+  // CORS is only needed for a genuinely cross-origin browser. Every supported
+  // setup keeps the SPA same-origin with the API (dev proxy, docker nginx, prod
+  // CloudFront), so CORS stays OFF unless CORS_ORIGIN is explicitly set — no
+  // localhost default that could leak into production.
+  const corsOrigin = config.get<string>('CORS_ORIGIN');
+  if (corsOrigin) {
+    app.enableCors({ origin: corsOrigin, credentials: true });
+  }
 
   const port = Number(config.get<string>('PORT', '3000'));
   await app.listen(port);

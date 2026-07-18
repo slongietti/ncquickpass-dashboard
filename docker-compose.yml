@@ -9,22 +9,43 @@
 #   COOKIE_SECRET=$(openssl rand -hex 32) docker compose up --build
 
 services:
+  # Local Postgres for a prod-like run. Production uses Neon (serverless Postgres);
+  # the app talks to both through the same `pg` driver adapter, so only the
+  # DATABASE_URL differs. Data survives rebuilds via the named volume below.
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ncquickpass
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dev-only-insecure-password}
+      POSTGRES_DB: ncquickpass
+    volumes:
+      - ncquickpass-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ncquickpass -d ncquickpass']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
   bff:
     build: ./api
+    depends_on:
+      db:
+        condition: service_healthy
     environment:
       PORT: 3000
-      # The public origin the browser uses (for CORS; requests are same-origin
-      # via nginx in this setup, so this is a belt-and-suspenders default).
-      CORS_ORIGIN: http://localhost:8080
+      # Requests are same-origin via nginx, so CORS is not needed here. Leave
+      # empty; only set CORS_ORIGIN (to an exact origin) for a cross-origin browser.
+      CORS_ORIGIN: ${CORS_ORIGIN:-}
       COOKIE_SECRET: ${COOKIE_SECRET:-dev-only-insecure-secret-change-me}
       # Set true when serving over HTTPS so the session cookie is marked Secure.
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       NCQP_BASE_URL: https://secure.ncquickpass.com
       NCQP_CLIENT_ID: AMSExternalngAuthApp
-      # SQLite lives on the named volume below so it survives image rebuilds.
-      # `prisma migrate deploy` (run at startup) only applies pending migrations,
-      # so the file is never overwritten.
-      DATABASE_URL: file:/data/ncquickpass.db
+      # Points at the local `db` service. In prod this is the Neon connection
+      # string instead. `prisma migrate deploy` (run at startup) only applies
+      # pending migrations, so existing data is never dropped.
+      DATABASE_URL: postgresql://ncquickpass:${POSTGRES_PASSWORD:-dev-only-insecure-password}@db:5432/ncquickpass
       # Credential encryption for unattended scheduling. CREDENTIAL_KEY (AWS KMS)
       # is preferred in prod (the app never holds the key; decryption is governed
       # by the KMS key policy). CREDENTIAL_KEY_LOCAL (a local AES key) is the
@@ -36,8 +57,6 @@ services:
       CREDENTIAL_KEY_LOCAL: ${CREDENTIAL_KEY_LOCAL:-}
     expose:
       - '3000'
-    volumes:
-      - ncquickpass-data:/data
     restart: unless-stopped
 
   web:
@@ -49,5 +68,5 @@ services:
     restart: unless-stopped
 
 volumes:
-  # Persists the SQLite database across container/image rebuilds.
+  # Persists the local Postgres data across container/image rebuilds.
   ncquickpass-data:
