@@ -18,7 +18,7 @@
       </label>
       <div class="range-total">
         <span class="range-total-label">
-          {{ selectedHighway === 'all' ? 'All highways' : selectedHighway }} total
+          {{ selectedHighway === 'all' ? 'Total:' : selectedHighway + ' total' }}
         </span>
         @if (isNoCost(visibleTotal)) {
           <span class="no-cost-chip">No Cost</span>
