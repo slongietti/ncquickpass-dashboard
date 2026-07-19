@@ -13,13 +13,11 @@ import { TransactionView } from '../../core/models/TransactionView';
 import { VehicleView } from '../../core/models/VehicleView';
 import { groupIntoTrips, replenishments } from '../../core/trip-grouping';
 import { endOfDay } from '../../core/date-utils';
-import { serverMessage } from '../../core/http-utils';
 import { FutureDeclaration } from '../../core/models/FutureDeclaration';
 import { ActivateRequest, HovStatusComponent } from './components/hov-status/hov-status.component';
 import { TripListComponent } from './components/trip-list/trip-list.component';
 import { AccountSummaryComponent } from './components/account-summary/account-summary.component';
 import { ScheduledDrawerComponent } from './components/scheduled-drawer/scheduled-drawer.component';
-import { PasswordPromptComponent } from '../../shared/password-prompt/password-prompt.component';
 import { NcqpLogoComponent } from '../../shared/ncqp-logo/ncqp-logo.component';
 
 export interface RangeOption {
@@ -46,7 +44,6 @@ const DAY_OPTIONS: RangeOption[] = [
     TripListComponent,
     AccountSummaryComponent,
     ScheduledDrawerComponent,
-    PasswordPromptComponent,
     NcqpLogoComponent,
   ],
   templateUrl: './dashboard.component.html',
@@ -86,10 +83,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly conflict = signal<{ req: ActivateRequest; declarations: FutureDeclaration[] } | null>(
     null,
   );
-  // Ad-hoc future declaration awaiting the password prompt.
-  readonly adhocPending = signal<ActivateRequest | null>(null);
-  readonly adhocBusy = signal(false);
-  readonly adhocPwError = signal<string | null>(null);
 
   ngOnInit(): void {
     this.loadAll();
@@ -187,48 +180,29 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.busyTransponder.set(null);
   }
 
-  /** A genuinely future start becomes a scheduled declaration (needs the password);
-   *  a blank or past start activates now. */
+  /** A genuinely future start becomes a one-off future-dated declaration created
+   *  directly with the session token; a blank or past start activates now. */
   private proceedActivate(req: ActivateRequest): void {
     const startsInFuture =
       !!req.startDateTime && new Date(req.startDateTime).getTime() > Date.now() + 60_000;
     if (startsInFuture) {
-      this.busyTransponder.set(null);
-      this.adhocPwError.set(null);
-      this.adhocPending.set(req);
+      this.doAdhoc(req);
     } else {
       this.doActivate(req);
     }
   }
 
-  confirmAdhocPassword(password: string): void {
-    const pending = this.adhocPending();
-    if (!pending?.startDateTime) return;
-    this.adhocBusy.set(true);
-    this.adhocPwError.set(null);
-    const start = new Date(pending.startDateTime);
-    const end = pending.endDateTime ? new Date(pending.endDateTime) : endOfDay(start);
+  private doAdhoc(req: ActivateRequest): void {
+    if (!req.startDateTime) return;
+    this.busyTransponder.set(req.transponderNumber);
+    const start = new Date(req.startDateTime);
+    const end = req.endDateTime ? new Date(req.endDateTime) : endOfDay(start);
     this.hov
-      .scheduleAdhoc(pending.transponderNumber, start.toISOString(), end.toISOString(), password)
+      .createAdhoc(req.transponderNumber, start.toISOString(), end.toISOString())
       .subscribe({
-        next: () => {
-          this.adhocBusy.set(false);
-          this.adhocPending.set(null);
-          this.afterHovChange('HOV scheduled.');
-        },
-        error: (err: HttpErrorResponse) => {
-          this.adhocBusy.set(false);
-          this.adhocPwError.set(
-            serverMessage(err) ?? 'Could not schedule that declaration. Please try again.',
-          );
-        },
+        next: () => this.afterHovChange('Future HOV declaration set.'),
+        error: (err) => this.handleActionError(err, 'Failed to set that HOV declaration.'),
       });
-  }
-
-  cancelAdhoc(): void {
-    this.adhocPending.set(null);
-    this.adhocPwError.set(null);
-    this.busyTransponder.set(null);
   }
 
   private doActivate(req: ActivateRequest): void {

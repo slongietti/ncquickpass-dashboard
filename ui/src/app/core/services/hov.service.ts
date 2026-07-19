@@ -65,18 +65,20 @@ export class HovService {
     return this.http.delete<{ deleted: boolean }>('/api/hov/schedule', { params });
   }
 
-  /** Create a one-off ad-hoc future-dated declaration (requires the password). */
-  scheduleAdhoc(
+  /**
+   * Create a one-off ad-hoc future-dated declaration. Created directly with the
+   * session token — no password needed (only weekly schedules run in the
+   * background). Still returned as an Upcoming entry.
+   */
+  createAdhoc(
     transponderNumber: string,
     startDateTime: string,
     endDateTime: string,
-    password: string,
   ): Observable<FutureDeclaration> {
     return this.http.post<FutureDeclaration>('/api/hov/schedule/adhoc', {
       transponderNumber,
       startDateTime,
       endDateTime,
-      password,
     });
   }
 

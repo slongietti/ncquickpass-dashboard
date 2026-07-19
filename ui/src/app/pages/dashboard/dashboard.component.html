@@ -80,17 +80,3 @@
   (saved)="onScheduleSaved($event)"
   (cancelUpcoming)="onCancelUpcoming($event)"
 />
-
-<app-password-prompt
-  [open]="!!adhocPending()"
-  [busy]="adhocBusy()"
-  [error]="adhocPwError()"
-  title="Schedule this HOV"
-  confirmLabel="Schedule"
-  (confirm)="confirmAdhocPassword($event)"
-  (cancel)="cancelAdhoc()"
->
-  This HOV declaration starts in the future, so it runs in the background. Enter your NC Quick Pass
-  password to authorize it — it's stored encrypted and used only by the scheduler,
-  <a href="/how-it-works" target="_blank" rel="noopener">how this works</a>.
-</app-password-prompt>

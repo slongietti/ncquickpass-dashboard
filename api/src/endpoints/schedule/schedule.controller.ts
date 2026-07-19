@@ -75,20 +75,28 @@ export class ScheduleController {
     return this.schedule.getSchedule(session.accountId, dto.transponderNumber);
   }
 
-  /** Create a one-off ad-hoc future-dated declaration (needs the password). */
+  /**
+   * Create a one-off ad-hoc future-dated declaration directly with the caller's
+   * session token. It never runs in the background (the cron only reconciles
+   * weekly schedules), so it needs no password and no vault. It is still stored
+   * as a `source: 'adhoc'` row so it appears in Upcoming and is conflict-checked.
+   */
   @Post('adhoc')
   async adhoc(
     @CurrentSession() session: NcqpSession,
     @Body() dto: AdhocDeclarationDto,
-    @Res({ passthrough: true }) res: Response,
   ): Promise<FutureDeclarationView> {
     const start = new Date(dto.startDateTime);
     const end = new Date(dto.endDateTime);
     if (!(end.getTime() > start.getTime())) {
       throw new BadRequestException('The end time must be after the start time.');
     }
-    const context = await this.armVault(session, dto.password, res);
-    return this.materialization.createAdhoc(context, dto.transponderNumber, start, end);
+    return this.materialization.createAdhoc(
+      ScheduleController.toContext(session),
+      dto.transponderNumber,
+      start,
+      end,
+    );
   }
 
   /**
