@@ -1,12 +1,31 @@
 # HOV Dashboard
 
-A personal dashboard for [NC Quick Pass](https://www.ncquickpass.com/) that shows your
-**I-77 Express Lanes (HOV) toll activity grouped into trips**, and lets you manage your
-**HOV declarations** (view current status, set a custom end date/time, and cancel) — all
-from a single page.
+**An NC Quick Pass extension project — scheduling and other features drivers want but the
+North Carolina state site doesn't provide.**
+
+The official [NC Quick Pass](https://www.ncquickpass.com/) site lets you file an HOV
+declaration for the I-77 Express Lanes one at a time, by hand, and lists your tolls
+undifferentiated. This dashboard closes those gaps from a single page: a recurring **weekly
+HOV schedule** that files your declarations automatically (even while you're logged out),
+full declaration management, and your I-77 activity grouped into trips.
 
 > Unofficial, personal-use project. Not affiliated with or endorsed by NC Quick Pass or
 > the North Carolina Turnpike Authority.
+
+## Features
+
+- **Weekly HOV scheduling** (opt-in) — a per-vehicle Monday–Sunday schedule (multiple time
+  ranges per day, or "All Day") that automatically creates future-dated NCQP declarations. A
+  daily background job keeps a rolling ~7-day horizon filled even while you're logged out, so
+  your HOV status is set without you touching the site. Ad-hoc declarations still work, and an
+  overlap with a scheduled window prompts you to cancel the scheduled one in favor of the ad-hoc.
+- **HOV status per vehicle** — each transponder with its current declaration status
+  (Active / Submitted / None), a `datetime-local` picker to set the HOV **end date/time**,
+  and a **Cancel** button for any active declaration.
+- **I-77 HOV trips** — your toll activity filtered to the I-77 Express Lanes
+  (`exitLocation` containing `77 EL`), grouped into **trips**: any tolls within **5 minutes**
+  of each other are one trip. Each trip shows the time span and **total amount**, and expands
+  (accordion) to list every individual toll.
 
 ## Architecture
 
@@ -28,21 +47,6 @@ The **NestJS backend-for-frontend (BFF)** exists for two reasons:
    cannot call it directly. The BFF proxies every call server-to-server.
 2. **Token security** — the BFF holds the NCQP bearer token in a signed, `HttpOnly`, `Secure`
    cookie, so JavaScript never reads it and it is never exposed to the SPA (see [Security](#security)).
-
-## Features (single "Dashboard" page)
-
-- **HOV status per vehicle** — each transponder with its current declaration status
-  (Active / Submitted / None), a `datetime-local` picker to set the HOV **end date/time**,
-  and a **Cancel** button for any active declaration.
-- **I-77 HOV trips** — your toll activity filtered to the I-77 Express Lanes
-  (`exitLocation` containing `77 EL`), grouped into **trips**: any tolls within **5 minutes**
-  of each other are one trip. Each trip shows the time span and **total amount**, and expands
-  (accordion) to list every individual toll.
-- **Weekly HOV scheduling** (opt-in) — a per-vehicle Monday–Sunday schedule (multiple time
-  ranges per day, or "All Day") that automatically creates future-dated NCQP declarations. A
-  daily background job keeps a rolling ~7-day horizon filled even while you're logged out. Ad-hoc
-  declarations still work, and overlaps with a scheduled window prompt you to cancel the
-  scheduled one in favor of the ad-hoc.
 
 ## Running locally
 
