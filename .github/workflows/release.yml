@@ -69,6 +69,7 @@ jobs:
     uses: Volare-Consulting-Software/.github/.github/workflows/push-container-image.yml@main
     permissions:
       contents: read
+      packages: write
       id-token: write
     with:
       registry: ecr
