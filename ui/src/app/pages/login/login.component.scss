@@ -69,11 +69,22 @@
     font-size: 0.72rem;
     color: var(--muted);
 
+    .volare-inline-link {
+      display: inline-flex;
+      line-height: 0;
+
+      &:hover .volare-inline,
+      &:focus-visible .volare-inline {
+        opacity: 0.9;
+      }
+    }
+
     .volare-inline {
       height: 22px;
       width: auto;
       filter: brightness(0);
       opacity: 0.65;
+      transition: opacity 0.15s ease;
     }
   }
 
