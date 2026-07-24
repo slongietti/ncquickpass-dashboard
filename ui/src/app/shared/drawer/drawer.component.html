@@ -2,7 +2,7 @@
   <div class="backdrop" (click)="close.emit()"></div>
   <aside class="drawer" role="dialog" aria-modal="true" [attr.aria-label]="title">
     <header class="drawer-head">
-      <h2>{{ title }}</h2>
+      <h2><ng-content select="[drawerIcon]" />{{ title }}</h2>
       <button class="drawer-close" type="button" (click)="close.emit()" aria-label="Close">✕</button>
     </header>
     <div class="drawer-body">

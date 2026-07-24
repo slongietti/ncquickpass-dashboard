@@ -2,8 +2,9 @@ import { Component, EventEmitter, Input, OnDestroy, OnInit, Output, signal } fro
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { DeclarationView } from '../../../../core/models/DeclarationView';
 import { VehicleView } from '../../../../core/models/VehicleView';
-import { isSameDay } from '../../../../core/date-utils';
+import { endOfDay, endOfWeek, isSameDay } from '../../../../core/date-utils';
 import { DateTimePickerDirective } from '../../../../core/date-time-picker.directive';
+import { CalendarIconComponent } from '../../../../shared/calendar-icon/calendar-icon.component';
 
 export interface ActivateRequest {
   transponderNumber: string;
@@ -12,12 +13,17 @@ export interface ActivateRequest {
   startDateTime?: string;
 }
 
+/** One-click HOV durations that spare the user from picking a date/time. */
+export type HovPreset = 'next4Hours' | 'restOfDay' | 'restOfWeek';
+
 const ACTIVE_STATUSES = ['active', 'submitted'];
+
+const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
 
 @Component({
   selector: 'app-hov-status',
   standalone: true,
-  imports: [DatePipe, NgTemplateOutlet, DateTimePickerDirective],
+  imports: [DatePipe, NgTemplateOutlet, DateTimePickerDirective, CalendarIconComponent],
   templateUrl: './hov-status.component.html',
   styleUrl: './hov-status.component.scss',
 })
@@ -139,6 +145,24 @@ export class HovStatusComponent implements OnInit, OnDestroy {
     this.activate.emit({ transponderNumber, endDateTime, startDateTime });
     // Collapse the extra "add another" form back to the button after submitting.
     this.showAdd[transponderNumber] = false;
+  }
+
+  /** Fill the End picker with a preset duration; the user reviews and confirms. */
+  onQuick(preset: HovPreset, endPicker: DateTimePickerDirective): void {
+    endPicker.setDate(HovStatusComponent.presetEnd(preset));
+  }
+
+  /** The end date/time (ISO) for a preset, measured from now. */
+  private static presetEnd(preset: HovPreset): string {
+    const now = new Date();
+    switch (preset) {
+      case 'next4Hours':
+        return new Date(now.getTime() + FOUR_HOURS_MS).toISOString();
+      case 'restOfDay':
+        return endOfDay(now).toISOString();
+      case 'restOfWeek':
+        return endOfWeek(now).toISOString();
+    }
   }
 
   onCancel(declarationId: string): void {

@@ -1,4 +1,5 @@
-<app-drawer [open]="open" title="Scheduled" (close)="close.emit()">
+<app-drawer [open]="open" title="Schedule" (close)="close.emit()">
+  <app-calendar-icon drawerIcon />
   @if (vehicles.length === 0) {
     <p class="empty">No transponders found on this account.</p>
   } @else {

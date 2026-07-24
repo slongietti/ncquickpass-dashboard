@@ -6,7 +6,8 @@
     </div>
     <div class="head-actions">
       <button class="btn-ghost schedule-btn" (click)="openScheduled.emit()">
-        Scheduled
+        <app-calendar-icon [size]="15" />
+        Schedule
         @if (upcomingCount > 0) {
           <span class="count-badge">{{ upcomingCount }}</span>
         }
@@ -86,8 +87,35 @@
 
   <ng-template #addForm let-t>
     <div class="actions">
+      <div class="quick-presets">
+        <span class="quick-label">Quick Options:</span>
+        <button
+          type="button"
+          class="chip-preset"
+          (click)="onQuick('next4Hours', endPicker)"
+          [disabled]="busyTransponder === t"
+        >
+          Next 4 hours
+        </button>
+        <button
+          type="button"
+          class="chip-preset"
+          (click)="onQuick('restOfDay', endPicker)"
+          [disabled]="busyTransponder === t"
+        >
+          Rest of day
+        </button>
+        <button
+          type="button"
+          class="chip-preset"
+          (click)="onQuick('restOfWeek', endPicker)"
+          [disabled]="busyTransponder === t"
+        >
+          Rest of week
+        </button>
+      </div>
       <label class="end-picker">
-        <span>HOV start</span>
+        <span>Start</span>
         <span class="date-field-wrap">
           <input
             type="text"
@@ -113,7 +141,7 @@
         </span>
       </label>
       <label class="end-picker">
-        <span>HOV end</span>
+        <span>End</span>
         <span class="date-field-wrap">
           <input
             type="text"

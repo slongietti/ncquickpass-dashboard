@@ -10,6 +10,7 @@ import {
 import { VehicleView } from '../../../../core/models/VehicleView';
 import { FutureDeclaration } from '../../../../core/models/FutureDeclaration';
 import { DrawerComponent } from '../../../../shared/drawer/drawer.component';
+import { CalendarIconComponent } from '../../../../shared/calendar-icon/calendar-icon.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select/select.component';
 import { WeeklySchedulePanelComponent } from '../weekly-schedule-panel/weekly-schedule-panel.component';
 import { UpcomingDeclarationsPanelComponent } from '../upcoming-declarations-panel/upcoming-declarations-panel.component';
@@ -26,6 +27,7 @@ type Tab = 'weekly' | 'upcoming';
   standalone: true,
   imports: [
     DrawerComponent,
+    CalendarIconComponent,
     SelectComponent,
     WeeklySchedulePanelComponent,
     UpcomingDeclarationsPanelComponent,
