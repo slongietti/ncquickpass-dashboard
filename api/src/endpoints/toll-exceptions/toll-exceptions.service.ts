@@ -50,10 +50,11 @@ const DISPUTE_DEFAULTS = {
 const TOLL_DISPUTE_TOPIC = 'Toll Dispute';
 const TOLL_DISPUTE_TOPIC_ID = 63;
 
-/** Toll window (days) scanned to correlate a dispute to its case transactions. */
-const CORRELATE_DAYS = 180;
-/** Cap on GetCaseByTrxn lookups per load (most tolls aren't part of a case). */
-const MAX_CASE_LOOKUPS = 80;
+/** Tolls precede the case; scan this many days before each dispute's created date. */
+const CORRELATE_PRE_DAYS = 120;
+const DAY_MS = 24 * 60 * 60 * 1000;
+/** Overall cap on GetCaseByTrxn lookups per disputes load. */
+const MAX_CASE_LOOKUPS = 120;
 /** A dispute matches a case only when their creation times are within this window. */
 const MATCH_TOLERANCE_MS = 5 * 60 * 1000;
 /** NC Quick Pass is Eastern; correspondence timestamps are local to this zone. */
@@ -89,76 +90,89 @@ export class TollExceptionsService {
 
   /**
    * Attach each dispute's tolls + total. NCQP won't return a case's transactions by
-   * the customer-facing case number, so we correlate: pull recent tolls, group them
-   * into cases via GetCaseByTrxn, then match a case to a dispute on creation time
-   * (the case's createdDate is UTC; the dispute's is NC-local). Disputes older than
-   * the scan window keep their notes but no itemized tolls.
+   * the customer-facing case number, so we correlate: for each dispute, scan the
+   * tolls in the window BEFORE its creation date (tolls always precede the case),
+   * group them into cases via GetCaseByTrxn, and take the case whose createdDate
+   * matches the dispute (case createdDate is UTC; the dispute's is NC-local) within
+   * 5 minutes, closest wins. The window is driven by each dispute's own date, so
+   * historical disputes are covered without a fixed look-back. Bounded + best-effort.
    */
   private async attachTransactions(session: NcqpSession, disputes: Dispute[]): Promise<void> {
-    if (disputes.length === 0) return;
-    const tolls = await this.recentTolls(session);
-    if (tolls.length === 0) return;
+    const dated = disputes
+      .map((dispute) => ({ dispute, ms: TollExceptionsService.easternToMs(dispute.createdDate) }))
+      .filter((x): x is { dispute: Dispute; ms: number } => x.ms != null)
+      .sort((a, b) => a.ms - b.ms);
+    if (dated.length === 0) return;
 
-    const byId = new Map(tolls.map((t) => [t.detailTransactionID as string, t]));
-    const assigned = new Set<string>();
+    const tollById = new Map<string, NcqpTransaction>();
+    const lookedUp = new Set<string>();
     const cases: CaseGroup[] = [];
     let lookups = 0;
 
-    for (const toll of tolls) {
-      const id = toll.detailTransactionID as string;
-      if (assigned.has(id) || lookups >= MAX_CASE_LOOKUPS) continue;
-      lookups++;
-      const found = await this.cases.getCaseByTrxn(session.token, id);
-      const ids = (found?.caseInfos?.caseTabs?.[0]?.data ?? [])
-        .map((d) => d.detailTransactionID ?? '')
-        .filter((x) => x.length > 0);
-      if (ids.length === 0) {
-        assigned.add(id);
-        continue;
-      }
-      ids.forEach((x) => assigned.add(x));
-      const transactions = ids
-        .map((x) => byId.get(x))
-        .filter((r): r is NcqpTransaction => !!r)
-        .map((r) => ({
-          exitLocation: r.exitLocation ?? '',
-          transactionDate: r.transactionDate ?? '',
-          debitAmount: typeof r.debitAmount === 'number' ? r.debitAmount : 0,
-        }));
-      const total = Math.round(transactions.reduce((sum, t) => sum + t.debitAmount, 0) * 100) / 100;
-      cases.push({ createdMs: Date.parse(found?.caseInfos?.createdDate ?? ''), transactions, total });
-    }
-
-    for (const dispute of disputes) {
-      const disputeMs = TollExceptionsService.easternToMs(dispute.createdDate);
-      if (disputeMs == null) continue;
-      // Closest case within the tolerance window wins.
+    const closest = (ms: number): CaseGroup | null => {
       let best: CaseGroup | null = null;
       let bestDiff = MATCH_TOLERANCE_MS;
       for (const group of cases) {
         if (Number.isNaN(group.createdMs)) continue;
-        const diff = Math.abs(group.createdMs - disputeMs);
+        const diff = Math.abs(group.createdMs - ms);
         if (diff <= bestDiff) {
           best = group;
           bestDiff = diff;
         }
       }
-      if (best) {
-        dispute.transactions = best.transactions;
-        dispute.total = best.total;
+      return best;
+    };
+
+    for (const { dispute, ms } of dated) {
+      // Only scan if a matching case hasn't already been discovered for another dispute.
+      if (!closest(ms) && lookups < MAX_CASE_LOOKUPS) {
+        const tolls = await this.tollsInWindow(session, ms - CORRELATE_PRE_DAYS * DAY_MS, ms + DAY_MS);
+        for (const toll of tolls) tollById.set(toll.detailTransactionID as string, toll);
+        for (const toll of tolls) {
+          if (lookups >= MAX_CASE_LOOKUPS) break;
+          const id = toll.detailTransactionID as string;
+          if (lookedUp.has(id)) continue;
+          lookedUp.add(id);
+          lookups++;
+          const found = await this.cases.getCaseByTrxn(session.token, id);
+          const ids = (found?.caseInfos?.caseTabs?.[0]?.data ?? [])
+            .map((d) => d.detailTransactionID ?? '')
+            .filter((x) => x.length > 0);
+          if (ids.length === 0) continue;
+          ids.forEach((x) => lookedUp.add(x));
+          const transactions = ids
+            .map((x) => tollById.get(x))
+            .filter((r): r is NcqpTransaction => !!r)
+            .map((r) => ({
+              exitLocation: r.exitLocation ?? '',
+              transactionDate: r.transactionDate ?? '',
+              debitAmount: typeof r.debitAmount === 'number' ? r.debitAmount : 0,
+            }));
+          const total = Math.round(transactions.reduce((sum, t) => sum + t.debitAmount, 0) * 100) / 100;
+          const createdMs = Date.parse(found?.caseInfos?.createdDate ?? '');
+          cases.push({ createdMs, transactions, total });
+          // Found this dispute's case — stop scanning its window.
+          if (!Number.isNaN(createdMs) && Math.abs(createdMs - ms) <= MATCH_TOLERANCE_MS) break;
+        }
+      }
+      const match = closest(ms);
+      if (match) {
+        dispute.transactions = match.transactions;
+        dispute.total = match.total;
       }
     }
   }
 
-  /** Recent tolls (with a ledger id) to scan for case membership. */
-  private async recentTolls(session: NcqpSession): Promise<NcqpTransaction[]> {
-    const end = new Date();
-    const start = new Date();
-    start.setDate(start.getDate() - CORRELATE_DAYS);
+  /** Tolls (with a ledger id) in a [startMs, endMs] window, for case correlation. */
+  private async tollsInWindow(
+    session: NcqpSession,
+    startMs: number,
+    endMs: number,
+  ): Promise<NcqpTransaction[]> {
     const rows = await this.transactions.searchTransactions(
       session.token,
-      TollExceptionsService.fmtDate(start),
-      TollExceptionsService.fmtDate(end),
+      TollExceptionsService.fmtDate(new Date(startMs)),
+      TollExceptionsService.fmtDate(new Date(endMs)),
       0,
       500,
     );

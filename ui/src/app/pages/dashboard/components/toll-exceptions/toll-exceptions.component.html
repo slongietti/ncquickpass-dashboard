@@ -62,6 +62,9 @@
   (close)="close()"
 >
   @if (selected(); as dispute) {
+    <span drawerHeadEnd class="badge" [class]="badgeClass(dispute)">{{ badgeLabel(dispute) }}</span>
+  }
+  @if (selected(); as dispute) {
     <div class="detail">
       @if (dispute.attachmentDocumentId) {
         <figure class="detail-image">
@@ -73,10 +76,6 @@
           <figcaption>Vehicle image provided by NC Quick Pass. Click to enlarge.</figcaption>
         </figure>
       }
-
-      <div class="detail-status">
-        <span class="badge" [class]="badgeClass(dispute)">{{ badgeLabel(dispute) }}</span>
-      </div>
 
       @if (dispute.transactions.length) {
         <div class="detail-txns">
