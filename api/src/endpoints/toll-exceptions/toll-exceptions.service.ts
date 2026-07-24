@@ -56,7 +56,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /** Overall cap on GetCaseByTrxn lookups per disputes load. */
 const MAX_CASE_LOOKUPS = 120;
 /** GetCaseByTrxn lookups fired concurrently per batch. */
-const LOOKUP_BATCH = 10;
+const LOOKUP_BATCH = 25;
 /** A dispute matches a case only when their creation times are within this window. */
 const MATCH_TOLERANCE_MS = 5 * 60 * 1000;
 /** NC Quick Pass is Eastern; correspondence timestamps are local to this zone. */
