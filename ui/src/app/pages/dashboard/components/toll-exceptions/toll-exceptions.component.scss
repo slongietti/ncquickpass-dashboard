@@ -80,6 +80,16 @@
   font-size: 0.78rem;
   color: var(--muted);
 }
+.row-end {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.row-total {
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
 .empty {
   color: var(--muted);
   font-size: 0.85rem;
