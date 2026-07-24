@@ -1,0 +1,13 @@
+/// A group of roads/lanes that tolls are classified into. `keywords` are matched
+/// case-insensitively against a toll's exit location; `hovEligible` marks roads
+/// where an HOV declaration can make a paid toll disputable. Seeded from
+/// prisma/seed.ts; the API caches these in memory (see RoadGroupService).
+model RoadGroup {
+  id          String   @id // stable slug, e.g. "i77-express"
+  label       String
+  keywords    String[] // case-insensitive substrings identifying the group
+  hovEligible Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

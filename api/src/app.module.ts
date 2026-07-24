@@ -11,6 +11,7 @@ import { AccountModule } from './endpoints/account/account.module';
 import { HovModule } from './endpoints/hov/hov.module';
 import { HovScheduleModule } from './endpoints/schedule/schedule.module';
 import { TransactionsModule } from './endpoints/transactions/transactions.module';
+import { RoadGroupModule } from './roads/road-group.module';
 import { HealthController } from './health.controller';
 
 // In the deployed (Lambda) container the Angular build is copied to ../client and
@@ -34,6 +35,7 @@ const serveStatic = existsSync(clientPath)
     HovModule,
     HovScheduleModule,
     TransactionsModule,
+    RoadGroupModule,
   ],
   controllers: [HealthController],
 })
