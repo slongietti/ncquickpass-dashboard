@@ -19,6 +19,8 @@ function toll(overrides: Partial<TransactionView>): TransactionView {
     creditAmount: null,
     transactionType: 'Toll Charge',
     vehicleClass: '1',
+    roadGroup: null,
+    disputable: false,
     ...overrides,
   };
 }
@@ -107,6 +109,18 @@ describe('groupIntoTrips', () => {
       toll({ transactionDate: '2026-07-11T10:05:00' }),
     ];
     expect(groupIntoTrips(txns).length).toBe(1);
+  });
+
+  it('groupIntoTrips_withAnyDisputableToll_marksTripDisputable', () => {
+    const txns = [
+      toll({ transactionDate: '2026-07-11T10:00:00', disputable: true }),
+      toll({ transactionDate: '2026-07-11T10:03:00' }),
+    ];
+    expect(groupIntoTrips(txns)[0].disputable).toBe(true);
+  });
+
+  it('groupIntoTrips_noDisputableTolls_tripNotDisputable', () => {
+    expect(groupIntoTrips([toll({})])[0].disputable).toBe(false);
   });
 });
 

@@ -91,6 +91,70 @@
     color: #fff;
   }
 }
+/* The disputable toggle is amber to read as "needs attention", not the accent. */
+.chip-disputable {
+  position: relative;
+  border-color: #f4c774;
+  color: #92400e;
+
+  &.active {
+    background: #d97706;
+    border-color: #d97706;
+    color: #fff;
+  }
+
+  /* Branded popover: light surface, hairline border, elevated shadow (per
+     volare-brand surface-overlay), shown on hover/focus of the chip. */
+  .chip-tooltip {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    width: max-content;
+    max-width: 250px;
+    padding: 0.55rem 0.7rem;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: 0 8px 24px rgba(28, 37, 48, 0.16);
+    color: var(--text);
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: normal;
+    text-transform: none;
+    text-align: left;
+    white-space: normal;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.14s ease;
+    pointer-events: none;
+  }
+  /* Down-pointing arrow (border layer, then surface fill on top). */
+  .chip-tooltip::before,
+  .chip-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+  }
+  .chip-tooltip::before {
+    border-top-color: var(--border);
+  }
+  .chip-tooltip::after {
+    margin-top: -1.5px;
+    border-top-color: var(--surface);
+  }
+
+  &:hover .chip-tooltip,
+  &:focus-visible .chip-tooltip {
+    opacity: 1;
+    visibility: visible;
+  }
+}
 
 .date-row {
   display: flex;
@@ -111,6 +175,21 @@
     background: var(--accent-dim);
     color: var(--accent-dark);
   }
+}
+
+/* Amber badge marking a paid HOV toll that fell inside a declared window. */
+.disputable-chip {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .trips {
@@ -184,6 +263,8 @@
     color: var(--muted);
   }
   .total {
+    min-width: 3.75rem;
+    text-align: right;
     font-weight: 700;
     color: var(--accent);
   }

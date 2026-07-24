@@ -29,16 +29,34 @@ export class TripListComponent {
 
   selectedHighway = 'all';
 
+  /** When on, only disputable trips are shown (independent of the highway filter). */
+  disputableOnly = false;
+
+  /** Explains what the Disputable filter means (shown on hover). */
+  readonly disputableHint =
+    'Filters for tolls that occurred while an HOV declaration was made within this application, ' +
+    'for a roadway that permits HOV declarations.';
+
   private readonly expanded = new Set<number>();
 
   get highways(): string[] {
     return Array.from(new Set(this.trips.map((t) => t.highway)));
   }
 
+  get hasDisputable(): boolean {
+    return this.trips.some((t) => t.disputable);
+  }
+
+  get disputableCount(): number {
+    return this.trips.filter((t) => t.disputable).length;
+  }
+
   get visibleTrips(): Trip[] {
-    return this.selectedHighway === 'all'
-      ? this.trips
-      : this.trips.filter((t) => t.highway === this.selectedHighway);
+    return this.trips.filter(
+      (t) =>
+        (this.selectedHighway === 'all' || t.highway === this.selectedHighway) &&
+        (!this.disputableOnly || t.disputable),
+    );
   }
 
   /** Total spend across the currently visible trips (respects range + highway filter). */
@@ -53,6 +71,11 @@ export class TripListComponent {
 
   setFilter(highway: string): void {
     this.selectedHighway = highway;
+    this.expanded.clear();
+  }
+
+  toggleDisputable(): void {
+    this.disputableOnly = !this.disputableOnly;
     this.expanded.clear();
   }
 

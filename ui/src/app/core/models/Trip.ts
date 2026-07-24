@@ -6,5 +6,7 @@ export interface Trip {
   end: string;
   total: number;
   highway: string;
+  /** True when any toll in the trip is disputable (paid HOV toll in a declared window). */
+  disputable: boolean;
   transactions: TransactionView[];
 }

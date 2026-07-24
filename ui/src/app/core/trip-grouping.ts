@@ -32,6 +32,7 @@ function makeTrip(transactions: TransactionView[]): Trip {
     end: transactions[transactions.length - 1].transactionDate,
     total: Math.round(total * 100) / 100,
     highway: highwayOf(transactions[0].exitLocation),
+    disputable: transactions.some((t) => t.disputable),
     transactions,
   };
 }
