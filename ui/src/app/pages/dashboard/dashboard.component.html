@@ -69,7 +69,12 @@
         (openDispute)="openDispute($event)"
       />
 
-      <app-toll-exceptions [disputes]="disputes()" [violations]="violations()" />
+      <app-toll-exceptions
+        [disputes]="disputes()"
+        [violations]="violations()"
+        [dayOptions]="dayOptions"
+        [loading]="disputesLoading()"
+      />
     </div>
   }
 </main>

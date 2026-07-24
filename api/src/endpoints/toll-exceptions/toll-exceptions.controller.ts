@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, Post, Res, UseGuards } from '@nestjs/common';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { AuthGuard } from '../auth/session/auth.guard';
 import { CurrentSession } from '../auth/session/current-session.decorator';
 import type { NcqpSession } from '../auth/session/session';

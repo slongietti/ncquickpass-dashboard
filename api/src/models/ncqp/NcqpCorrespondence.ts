@@ -16,5 +16,7 @@ export interface NcqpCorrespondence {
   webAlertText?: string;
   deliveryType?: string;
   timestamp?: string;
+  /** Groups the Email and Web Alert copies of the same notification event. */
+  queueNotificationRequestID?: number;
   [key: string]: unknown;
 }

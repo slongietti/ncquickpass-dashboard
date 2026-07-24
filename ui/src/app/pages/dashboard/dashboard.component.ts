@@ -88,6 +88,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   readonly disputes = signal<Dispute[]>([]);
   readonly reasons = signal<DisputeReason[]>([]);
+  readonly disputesLoading = signal(true);
   readonly violations = computed(() => this.transactions().filter((t) => t.hovViolation));
   readonly disputeTrip = signal<Trip | null>(null);
   readonly disputeBusy = signal(false);
@@ -109,6 +110,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadAll();
     this.refreshFuture();
+    this.loadDisputes();
   }
 
   ngOnDestroy(): void {
@@ -134,8 +136,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       transactions: this.transactionSvc.getTransactions(this.days()),
       account: this.accountSvc.getSummary(),
       roadGroups: this.roadGroupSvc.getRoadGroups(),
-      disputes: this.tollExceptionsSvc.getDisputes(),
-      reasons: this.tollExceptionsSvc.getReasons(),
     }).subscribe({
       next: (res) => {
         this.vehicles.set(res.vehicles);
@@ -143,8 +143,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.transactions.set(res.transactions);
         this.roadGroups.set(res.roadGroups);
         this.account.set(res.account);
-        this.disputes.set(res.disputes);
-        this.reasons.set(res.reasons);
         this.loading.set(false);
       },
       error: (err) => this.handleError(err, 'Failed to load your dashboard.'),
@@ -311,6 +309,25 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.disputeBusy.set(false);
         this.handleActionError(err, 'Failed to file your dispute. Please try again.');
       },
+    });
+  }
+
+  /**
+   * Load disputes + reasons on their own so the (slower) correspondence fetch never
+   * blocks the rest of the dashboard; the card shows a skeleton until they arrive.
+   */
+  loadDisputes(): void {
+    this.disputesLoading.set(true);
+    forkJoin({
+      disputes: this.tollExceptionsSvc.getDisputes(),
+      reasons: this.tollExceptionsSvc.getReasons(),
+    }).subscribe({
+      next: (res) => {
+        this.disputes.set(res.disputes);
+        this.reasons.set(res.reasons);
+        this.disputesLoading.set(false);
+      },
+      error: () => this.disputesLoading.set(false),
     });
   }
 

@@ -7,14 +7,32 @@
   </header>
 
   <div class="section">
-    <h3 class="section-title">Disputes</h3>
+    <div class="section-head">
+      <h3 class="section-title">Disputes</h3>
+      @if (dayOptions.length) {
+        <label class="range">
+          <span>Range</span>
+          <app-select
+            [options]="rangeOptions"
+            [value]="days()"
+            (valueChange)="onDaysChange(+$event)"
+          />
+        </label>
+      }
+    </div>
     @if (loading) {
-      <p class="empty">Loading…</p>
+      <ul class="rows">
+        @for (row of skeletonRows; track row) {
+          <li class="skeleton-row"></li>
+        }
+      </ul>
     } @else if (disputes.length === 0) {
       <p class="empty">No disputes filed.</p>
+    } @else if (visibleDisputes.length === 0) {
+      <p class="empty">No disputes in this range.</p>
     } @else {
       <ul class="rows">
-        @for (dispute of disputes; track dispute.caseNumber) {
+        @for (dispute of visibleDisputes; track dispute.caseNumber) {
           <li>
             <button class="row" type="button" (click)="open(dispute)">
               <span class="row-main">
@@ -23,7 +41,12 @@
                   <span class="row-sub">{{ dispute.createdDate | date: 'MMM d, y' }}</span>
                 }
               </span>
-              <span class="badge" [class]="badgeClass(dispute)">{{ badgeLabel(dispute) }}</span>
+              <span class="row-end">
+                @if (dispute.transactions.length) {
+                  <span class="row-total">{{ dispute.total | currency }}</span>
+                }
+                <span class="badge" [class]="badgeClass(dispute)">{{ badgeLabel(dispute) }}</span>
+              </span>
             </button>
           </li>
         }
@@ -58,27 +81,73 @@
 >
   @if (selected(); as dispute) {
     <div class="detail">
+      @if (dispute.attachmentDocumentId) {
+        <figure class="detail-image">
+          <img
+            [src]="imageUrl(dispute.attachmentDocumentId)"
+            alt="Vehicle image attached to the case"
+            (click)="openLightbox(imageUrl(dispute.attachmentDocumentId), 'case-' + dispute.caseNumber + '.png')"
+          />
+          <figcaption>Vehicle image provided by NC Quick Pass. Click to enlarge.</figcaption>
+        </figure>
+      }
+
       <div class="detail-status">
         <span class="badge" [class]="badgeClass(dispute)">{{ badgeLabel(dispute) }}</span>
-        @if (dispute.lastUpdated) {
-          <span class="detail-updated">Updated {{ dispute.lastUpdated }}</span>
-        }
       </div>
 
-      @if (dispute.decisionNotes) {
-        <p class="detail-notes">{{ dispute.decisionNotes }}</p>
+      @if (dispute.transactions.length) {
+        <div class="detail-txns">
+          <div class="detail-txns-head">
+            <span class="detail-txns-title">Disputed tolls</span>
+            <span class="detail-txns-total">{{ dispute.total | currency }}</span>
+          </div>
+          <ul class="txn-list">
+            @for (txn of dispute.transactions; track $index) {
+              <li class="txn-row">
+                <span class="txn-loc">{{ txn.exitLocation }}</span>
+                <span class="txn-when">{{ txn.transactionDate | date: 'MMM d, y · h:mm a' }}</span>
+                <span class="txn-amt">{{ txn.debitAmount | currency }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+
+      @if (dispute.notes.length) {
+        <div class="notes">
+          @for (note of dispute.notes; track $index) {
+            <div class="note">
+              <div class="note-head">
+                @if (note.date) {
+                  <span class="note-date">{{ note.date | date: 'MMM d, y · h:mm a' }}</span>
+                }
+                @if (note.status) {
+                  <span class="note-status">{{ note.status }}</span>
+                }
+              </div>
+              <p class="note-text" [innerHTML]="highlight(note.text)"></p>
+            </div>
+          }
+        </div>
       } @else {
         <p class="detail-notes muted">
           No agency response yet. Their decision will appear here once they respond.
         </p>
       }
 
-      @if (dispute.attachmentDocumentId) {
-        <figure class="detail-image">
-          <img [src]="imageUrl(dispute.attachmentDocumentId)" alt="Vehicle image attached to the case" />
-          <figcaption>Vehicle image provided by NC Quick Pass.</figcaption>
-        </figure>
-      }
     </div>
   }
 </app-drawer>
+
+@if (lightbox(); as image) {
+  <div class="lightbox-backdrop" (click)="closeLightbox()">
+    <div class="lightbox" (click)="$event.stopPropagation()">
+      <img [src]="image.url" alt="Case vehicle image" />
+      <div class="lightbox-actions">
+        <a class="lightbox-download" [href]="image.url" [download]="image.name">Download</a>
+        <button class="btn-ghost" type="button" (click)="closeLightbox()">Close</button>
+      </div>
+    </div>
+  </div>
+}

@@ -25,37 +25,35 @@
         }
         <span class="range-total-amt">{{ visibleTotal | currency }}</span>
       </div>
-      <button class="btn-ghost btn-dispute" type="button" (click)="togglePicking()">
-        {{ picking ? 'Cancel dispute' : 'Create Dispute' }}
-      </button>
     </div>
   </header>
 
-  @if (groupLabels.length > 1 || hasDisputable) {
-    <div class="filters">
-      @if (groupLabels.length > 1) {
-        <button class="chip" [class.active]="selectedGroup === 'all'" (click)="setFilter('all')">
-          All
-        </button>
-        @for (g of groupLabels; track g) {
-          <button class="chip" [class.active]="selectedGroup === g" (click)="setFilter(g)">
-            {{ g }}
-          </button>
-        }
-      }
-      @if (hasDisputable) {
-        <button
-          class="chip chip-disputable"
-          [class.active]="disputableOnly"
-          (click)="toggleDisputable()"
-          [attr.aria-label]="'Disputable filter. ' + disputableHint"
-        >
-          Disputable ({{ disputableCount }})
-          <span class="chip-tooltip" role="tooltip">{{ disputableHint }}</span>
+  <div class="filters">
+    @if (groupLabels.length > 1) {
+      <button class="chip" [class.active]="selectedGroup === 'all'" (click)="setFilter('all')">
+        All
+      </button>
+      @for (g of groupLabels; track g) {
+        <button class="chip" [class.active]="selectedGroup === g" (click)="setFilter(g)">
+          {{ g }}
         </button>
       }
-    </div>
-  }
+    }
+    @if (hasDisputable) {
+      <button
+        class="chip chip-disputable"
+        [class.active]="disputableOnly"
+        (click)="toggleDisputable()"
+        [attr.aria-label]="'Disputable filter. ' + disputableHint"
+      >
+        Disputable ({{ disputableCount }})
+        <span class="chip-tooltip" role="tooltip">{{ disputableHint }}</span>
+      </button>
+    }
+    <button class="btn-ghost btn-dispute" type="button" (click)="togglePicking()">
+      {{ picking ? 'Cancel' : 'Dispute' }}
+    </button>
+  </div>
 
   @if (picking) {
     <p class="pick-hint">Select a trip to dispute its tolls.</p>
