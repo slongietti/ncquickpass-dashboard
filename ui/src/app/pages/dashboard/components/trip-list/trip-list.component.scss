@@ -12,6 +12,22 @@
   max-height: calc(100vh - 6.25rem);
 }
 
+/* On a single-column phone layout the pinned, near-full-height card would fill
+   the viewport and hide the cards stacked below it (the disputes card never
+   comes into view). Let it flow at natural height instead and scroll the page. */
+@media (max-width: 860px) {
+  :host {
+    position: static;
+    top: auto;
+  }
+  .card {
+    max-height: none;
+  }
+  .trips {
+    overflow-y: visible;
+  }
+}
+
 .card-head {
   display: flex;
   align-items: flex-start;
