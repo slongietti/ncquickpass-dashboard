@@ -197,6 +197,11 @@
     white-space: nowrap;
     text-decoration: none;
   }
+  /* Long URLs must wrap inside the card, unlike the short date/currency chips. */
+  ::ng-deep a.hl {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
   ::ng-deep a.hl:hover {
     text-decoration: underline;
   }
