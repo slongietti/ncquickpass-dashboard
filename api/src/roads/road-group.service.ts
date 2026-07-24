@@ -5,7 +5,7 @@ import { DbClient } from '../database/db-client';
 export interface RoadGroup {
   /** Stable slug, safe to reference from the UI or persist. */
   id: string;
-  /** Human-readable label, e.g. "I-77 Express Lanes". */
+  /** Human-readable label, e.g. "I-77". */
   label: string;
   /** Case-insensitive substrings that identify this group in an exit-location string. */
   keywords: string[];

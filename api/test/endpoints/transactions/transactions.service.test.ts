@@ -26,7 +26,7 @@ function toll(over: Partial<NcqpTransaction>): NcqpTransaction {
 }
 
 const ROAD_GROUPS = [
-  { id: 'i77-express', label: 'I-77 Express Lanes', keywords: ['77 EL'], hovEligible: true },
+  { id: 'i77-express', label: 'I-77', keywords: ['77 EL'], hovEligible: true },
 ];
 
 async function makeService(rows: NcqpTransaction[], windows: unknown[]) {

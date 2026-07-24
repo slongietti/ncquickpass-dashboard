@@ -14,5 +14,5 @@ CREATE TABLE "RoadGroup" (
 -- Seed the baseline road group so classification works in every environment
 -- (dev, CI, prod). Idempotent; the prisma/seed.ts dataseed keeps the full list.
 INSERT INTO "RoadGroup" ("id", "label", "keywords", "hovEligible", "sortOrder", "updatedAt")
-VALUES ('i77-express', 'I-77 Express Lanes', ARRAY['77 EL'], true, 0, CURRENT_TIMESTAMP)
+VALUES ('i77-express', 'I-77', ARRAY['77 EL'], true, 0, CURRENT_TIMESTAMP)
 ON CONFLICT ("id") DO NOTHING;

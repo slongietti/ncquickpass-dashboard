@@ -2,7 +2,7 @@ import { RoadGroupService } from '../../src/roads/road-group.service';
 import { DbClient } from '../../src/database/db-client';
 
 const SEED = [
-  { id: 'i77-express', label: 'I-77 Express Lanes', keywords: ['77 EL'], hovEligible: true },
+  { id: 'i77-express', label: 'I-77', keywords: ['77 EL'], hovEligible: true },
 ];
 
 async function makeService(rows: unknown[] = SEED): Promise<RoadGroupService> {
