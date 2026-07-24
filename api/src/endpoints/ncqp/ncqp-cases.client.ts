@@ -2,6 +2,7 @@ import { HttpException, Injectable, InternalServerErrorException } from '@nestjs
 import { ConfigService } from '@nestjs/config';
 import { NcqpClient } from './ncqp-client.base';
 import { AddCaseInput } from '../../models/ncqp/AddCaseInput';
+import { NcqpCase } from '../../models/ncqp/NcqpCase';
 import { NcqpCaseType } from '../../models/ncqp/NcqpCaseType';
 import { NcqpDisputeReason } from '../../models/ncqp/NcqpDisputeReason';
 import { TracerTicketInput } from '../../models/ncqp/TracerTicketInput';
@@ -69,6 +70,26 @@ export class NcqpCasesClient extends NcqpClient {
     } catch (e) {
       if (e instanceof HttpException) throw e;
       throw this.mapError(e, 'Failed to open dispute case', 'createTracerTicket');
+    }
+  }
+
+  /**
+   * The case a transaction belongs to (by its detailTransactionID), including the
+   * case's other transactions and its createdDate. Returns null when the toll isn't
+   * part of a case — that's an empty 200, not an error, so it never fails a batch.
+   */
+  async getCaseByTrxn(token: string, detailTransactionId: string): Promise<NcqpCase | null> {
+    try {
+      const res = await this.http.get<NcqpCase | ''>(
+        `/external/api/v2/CaseManagementAPI/GetCaseByTrxn/${encodeURIComponent(detailTransactionId)}`,
+        { headers: this.authHeaders(token) },
+      );
+      const data = res.data;
+      return data && typeof data === 'object' && (data as NcqpCase).caseId != null
+        ? (data as NcqpCase)
+        : null;
+    } catch {
+      return null;
     }
   }
 

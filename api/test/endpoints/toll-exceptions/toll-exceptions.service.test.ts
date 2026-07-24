@@ -1,6 +1,7 @@
 import { TollExceptionsService } from '../../../src/endpoints/toll-exceptions/toll-exceptions.service';
 import { NcqpAccountClient } from '../../../src/endpoints/ncqp/ncqp-account.client';
 import { NcqpCasesClient } from '../../../src/endpoints/ncqp/ncqp-cases.client';
+import { NcqpTransactionsClient } from '../../../src/endpoints/ncqp/ncqp-transactions.client';
 import { NcqpSession } from '../../../src/endpoints/auth/session/session';
 
 const SESSION = { token: 't', userId: 'u', accountId: 'ACC' } as unknown as NcqpSession;
@@ -25,12 +26,15 @@ function makeMocks() {
     generateTicketNumber: jest.fn().mockResolvedValue('1707135'),
     createTracerTicket: jest.fn().mockResolvedValue(1601460),
     addCase: jest.fn().mockResolvedValue(undefined),
+    getCaseByTrxn: jest.fn().mockResolvedValue(null),
   };
+  const transactions = { searchTransactions: jest.fn().mockResolvedValue([]) };
   const service = new TollExceptionsService(
     account as unknown as NcqpAccountClient,
     cases as unknown as NcqpCasesClient,
+    transactions as unknown as NcqpTransactionsClient,
   );
-  return { account, cases, service };
+  return { account, cases, transactions, service };
 }
 
 describe('TollExceptionsService.getReasons', () => {
@@ -120,5 +124,52 @@ describe('TollExceptionsService.getDisputes', () => {
     expect(disputes).toHaveLength(1);
     expect(disputes[0].caseNumber).toBe('1707135');
     expect(disputes[0].status).toBe('Filed');
+  });
+
+  it('getDisputes_caseCreatedWithinFiveMinutes_itemizesTollsByTxnId', async () => {
+    const { account, transactions, cases, service } = makeMocks();
+    account.searchCorrespondence.mockResolvedValue([
+      {
+        displayName: 'Customer Case Created Confirmation',
+        // Zone-less Eastern: 08:45:19 EDT = 12:45:19Z.
+        timestamp: '2024-10-09T08:45:19',
+        emailText: 'Your case has been created and the case ID is 1322705.',
+      },
+    ]);
+    transactions.searchTransactions.mockResolvedValue([
+      { activityTypeName: 'Toll', detailTransactionID: 'A', exitLocation: 'Exit 1', transactionDate: '2024-10-08T10:00:00', debitAmount: 4.5 },
+      { activityTypeName: 'Toll', detailTransactionID: 'B', exitLocation: 'Exit 2', transactionDate: '2024-10-08T10:03:00', debitAmount: 2.0 },
+    ]);
+    cases.getCaseByTrxn.mockResolvedValue({
+      caseId: 1601460,
+      caseInfos: {
+        createdDate: '2024-10-09T12:45:30.000Z', // 11s from the dispute
+        caseTabs: [{ data: [{ detailTransactionID: 'A' }, { detailTransactionID: 'B' }] }],
+      },
+    });
+    const [dispute] = await service.getDisputes(SESSION);
+    expect(dispute.total).toBe(6.5);
+    expect(dispute.transactions).toEqual([
+      { exitLocation: 'Exit 1', transactionDate: '2024-10-08T10:00:00', debitAmount: 4.5 },
+      { exitLocation: 'Exit 2', transactionDate: '2024-10-08T10:03:00', debitAmount: 2.0 },
+    ]);
+  });
+
+  it('getDisputes_caseOutsideFiveMinutes_leavesTollsEmpty', async () => {
+    const { account, transactions, cases, service } = makeMocks();
+    account.searchCorrespondence.mockResolvedValue([
+      { displayName: 'Customer Case Created Confirmation', timestamp: '2024-10-09T08:45:19', emailText: 'case ID is 1322705.' },
+    ]);
+    transactions.searchTransactions.mockResolvedValue([
+      { activityTypeName: 'Toll', detailTransactionID: 'A', exitLocation: 'Exit 1', transactionDate: '2024-10-08T10:00:00', debitAmount: 4.5 },
+    ]);
+    cases.getCaseByTrxn.mockResolvedValue({
+      caseId: 1601460,
+      // ~45 min from the dispute -> outside the window.
+      caseInfos: { createdDate: '2024-10-09T13:30:00.000Z', caseTabs: [{ data: [{ detailTransactionID: 'A' }] }] },
+    });
+    const [dispute] = await service.getDisputes(SESSION);
+    expect(dispute.transactions).toEqual([]);
+    expect(dispute.total).toBe(0);
   });
 });
