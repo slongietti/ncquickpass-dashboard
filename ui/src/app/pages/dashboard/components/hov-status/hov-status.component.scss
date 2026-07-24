@@ -18,6 +18,9 @@
 }
 
 .schedule-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.82rem;
   padding: 0.4rem 0.7rem;
 }
@@ -137,6 +140,36 @@
   gap: 0.2rem;
   font-size: 0.75rem;
   color: var(--muted);
+}
+
+/* One-click duration presets, on their own full-width row above the pickers. */
+.quick-presets {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.quick-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-right: 0.15rem;
+}
+
+.chip-preset {
+  background: var(--accent-dim);
+  border: 1px solid transparent;
+  color: var(--accent-dark);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+
+  &:hover:not(:disabled) {
+    background: var(--accent);
+    color: #fff;
+  }
 }
 
 /* Wraps the flatpickr field so the inline clear button can overlay its right

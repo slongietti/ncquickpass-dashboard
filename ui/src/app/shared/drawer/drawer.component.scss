@@ -29,6 +29,9 @@
   border-bottom: 1px solid var(--border);
 
   h2 {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
     margin: 0;
     font-size: 1.1rem;
   }

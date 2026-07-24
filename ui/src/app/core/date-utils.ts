@@ -13,3 +13,15 @@ export function endOfDay(d: Date): Date {
   e.setHours(23, 59, 59, 999);
   return e;
 }
+
+/**
+ * A copy of the given date at the last millisecond of its week's Sunday. Weeks
+ * run Monday–Sunday (matching the weekly HOV schedule), so on a Sunday this is
+ * the end of that same day.
+ */
+export function endOfWeek(d: Date): Date {
+  const e = endOfDay(d);
+  const daysUntilSunday = (7 - e.getDay()) % 7; // getDay: 0=Sun..6=Sat
+  e.setDate(e.getDate() + daysUntilSunday);
+  return e;
+}

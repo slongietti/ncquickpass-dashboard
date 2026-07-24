@@ -22,6 +22,11 @@ export class DateTimePickerDirective implements OnInit, OnDestroy {
     this.picker?.clear();
   }
 
+  /** Set the picker to an ISO date/time, firing onChange so bound models update. */
+  setDate(iso: string): void {
+    this.picker?.setDate(new Date(iso), true);
+  }
+
   ngOnInit(): void {
     this.picker = flatpickr(this.host.nativeElement, {
       enableTime: true,

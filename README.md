@@ -102,6 +102,29 @@ COOKIE_SECRET=$(openssl rand -hex 32) COOKIE_SECURE=true docker compose up --bui
 | `bff`   | `node`        | NestJS backend-for-frontend (not published)       |
 | `web`   | `nginx`       | Serves the Angular SPA + proxies `/api` → `bff`   |
 
+## Configuration
+
+All backend config is environment variables (see [`api/.env.example`](./api/.env.example)).
+**Only `DATABASE_URL` and `COOKIE_SECRET` are required** — everything else has a safe
+code default or gates an optional feature.
+
+| Variable | Required | Purpose | Where it's set |
+| --- | --- | --- | --- |
+| `DATABASE_URL` | **Yes** | Postgres connection string | Local: `api/.env`. Prod: **GitHub repo secret**, synced onto the Lambda every release by CI (`set-lambda-env-var.yml`) and used for migrations. |
+| `COOKIE_SECRET` | **Yes** | Signs the session cookie | Local: `api/.env`. Prod: **Lambda env var** (set once at bootstrap; not in GitHub). |
+| `NCQP_BASE_URL` / `NCQP_CLIENT_ID` | No | NC Quick Pass upstream | Code defaults to the real values; override via `api/.env` or the Lambda env. |
+| `PORT` | No | API port (default 3000) | `api/.env` locally; the Lambda Web Adapter handles it in prod. |
+| `CORS_ORIGIN` | No | Cross-origin allow-list (off when empty) | Empty everywhere — the SPA is same-origin. |
+| `COOKIE_SECURE` | No | Marks the cookie `Secure` | `false` locally; `true` on the Lambda (HTTPS). |
+| `CREDENTIAL_KEY` | Feature | KMS key for the credential vault | Prod: **Lambda env** = KMS key ARN. Enables unattended weekly scheduling. |
+| `CREDENTIAL_KEY_LOCAL` | Feature | Dev AES key for the vault | Local only (`api/.env`); prod uses `CREDENTIAL_KEY`. |
+| `CRON_SECRET` | Feature | Guards `POST /api/internal/cron` | Prod: **Lambda env**, and the same value in the EventBridge schedule input. Unused locally (cron runs in-process). |
+
+Locally, every value comes from `api/.env` (copy from `.env.example`). In production the
+values live on the **Lambda function's environment** — `DATABASE_URL` is the one exception,
+kept as a GitHub secret so CI keeps the function in sync when it's rotated. CI's AWS auth uses
+the `OIDC_AWS_ROLE_ARN` **org** secret, which is not an application variable.
+
 ## Deployment
 
 Production runs on AWS as a **single Lambda container** (the NestJS API also serves

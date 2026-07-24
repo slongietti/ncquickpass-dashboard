@@ -1,4 +1,4 @@
-import { endOfDay, isSameDay } from './date-utils';
+import { endOfDay, endOfWeek, isSameDay } from './date-utils';
 
 describe('date-utils', () => {
   describe('isSameDay', () => {
@@ -36,6 +36,41 @@ describe('date-utils', () => {
       endOfDay(d);
       expect(d.getHours()).toBe(8);
       expect(d.getMinutes()).toBe(30);
+    });
+  });
+
+  describe('endOfWeek', () => {
+    it('endOfWeek_midweek_returnsEndOfComingSunday', () => {
+      // 2026-07-15 is a Wednesday; its Mon–Sun week ends Sunday 2026-07-19.
+      const e = endOfWeek(new Date(2026, 6, 15, 10, 0));
+      expect(e.getMonth()).toBe(6);
+      expect(e.getDate()).toBe(19);
+      expect(e.getDay()).toBe(0); // Sunday
+      expect(e.getHours()).toBe(23);
+      expect(e.getMinutes()).toBe(59);
+      expect(e.getSeconds()).toBe(59);
+      expect(e.getMilliseconds()).toBe(999);
+    });
+
+    it('endOfWeek_onSunday_returnsEndOfSameDay', () => {
+      // 2026-07-19 is a Sunday, so the rest of the week is the rest of that day.
+      const e = endOfWeek(new Date(2026, 6, 19, 9, 0));
+      expect(e.getDate()).toBe(19);
+      expect(e.getHours()).toBe(23);
+    });
+
+    it('endOfWeek_onMonday_returnsEndOfThatWeeksSunday', () => {
+      // 2026-07-13 is a Monday; the week ends Sunday 2026-07-19.
+      const e = endOfWeek(new Date(2026, 6, 13, 6, 0));
+      expect(e.getDate()).toBe(19);
+      expect(e.getDay()).toBe(0);
+    });
+
+    it('endOfWeek_called_doesNotMutateInput', () => {
+      const d = new Date(2026, 6, 15, 10, 0);
+      endOfWeek(d);
+      expect(d.getDate()).toBe(15);
+      expect(d.getHours()).toBe(10);
     });
   });
 });
