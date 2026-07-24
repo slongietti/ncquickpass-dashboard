@@ -61,6 +61,18 @@
   gap: 1.25rem;
 }
 
+@media (max-width: 860px) {
+  .content {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .content {
+    padding: 0.75rem;
+  }
+}
+
 .grid {
   display: grid;
   /* Give the HOV status column (col 1) the most room. */
@@ -85,7 +97,11 @@
 
 @media (max-width: 860px) {
   .grid {
-    grid-template-columns: 1fr;
+    /* minmax(0, 1fr), not 1fr: a bare 1fr track is minmax(auto, 1fr) and won't
+       shrink below its content's min width, so a wide card (a long toll row or
+       note) overflows the viewport horizontally on a phone. */
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
   }
 }
 
