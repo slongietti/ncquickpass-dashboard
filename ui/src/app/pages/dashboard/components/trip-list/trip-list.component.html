@@ -28,30 +28,40 @@
     </div>
   </header>
 
-  @if (groupLabels.length > 1 || hasDisputable) {
-    <div class="filters">
-      @if (groupLabels.length > 1) {
-        <button class="chip" [class.active]="selectedGroup === 'all'" (click)="setFilter('all')">
-          All
-        </button>
-        @for (g of groupLabels; track g) {
-          <button class="chip" [class.active]="selectedGroup === g" (click)="setFilter(g)">
-            {{ g }}
-          </button>
-        }
-      }
-      @if (hasDisputable) {
-        <button
-          class="chip chip-disputable"
-          [class.active]="disputableOnly"
-          (click)="toggleDisputable()"
-          [attr.aria-label]="'Disputable filter. ' + disputableHint"
-        >
-          Disputable ({{ disputableCount }})
-          <span class="chip-tooltip" role="tooltip">{{ disputableHint }}</span>
+  <div class="filters">
+    @if (groupLabels.length > 1) {
+      <button class="chip" [class.active]="selectedGroup === 'all'" (click)="setFilter('all')">
+        All
+      </button>
+      @for (g of groupLabels; track g) {
+        <button class="chip" [class.active]="selectedGroup === g" (click)="setFilter(g)">
+          {{ g }}
         </button>
       }
-    </div>
+    }
+    @if (hasDisputable) {
+      <button
+        class="chip chip-disputable"
+        [class.active]="disputableOnly"
+        (click)="toggleDisputable()"
+        [attr.aria-label]="'Disputable filter. ' + disputableHint"
+      >
+        Disputable ({{ disputableCount }})
+        <span class="chip-tooltip" role="tooltip">{{ disputableHint }}</span>
+      </button>
+    }
+    @if (hasViolation) {
+      <button class="chip chip-violation" [class.active]="violationOnly" (click)="toggleViolation()">
+        Violation ({{ violationCount }})
+      </button>
+    }
+    <button class="btn-ghost btn-dispute" type="button" (click)="togglePicking()">
+      {{ picking ? 'Cancel' : 'Dispute' }}
+    </button>
+  </div>
+
+  @if (picking) {
+    <p class="pick-hint">Select a trip to dispute its tolls.</p>
   }
 
   @if (visibleTrips.length === 0) {
@@ -61,7 +71,12 @@
   <ul class="trips">
     @for (trip of visibleTrips; track $index) {
       <li class="trip" [class.open]="isExpanded($index)">
-        <button class="trip-head" (click)="toggle($index)" [attr.aria-expanded]="isExpanded($index)">
+        <button
+          class="trip-head"
+          [class.pickable]="picking"
+          (click)="picking ? pick(trip) : toggle($index)"
+          [attr.aria-expanded]="isExpanded($index)"
+        >
           <span class="chevron" aria-hidden="true">{{ isExpanded($index) ? '▾' : '▸' }}</span>
           <span class="trip-when">
             <span class="date-row">
@@ -74,7 +89,20 @@
               }
               <span class="hwy-chip" [class.grouped]="!!trip.roadGroup">{{ trip.roadGroupLabel }}</span>
               @if (trip.disputable) {
-                <span class="disputable-chip">Disputable</span>
+                <span
+                  class="disputable-chip is-action"
+                  (click)="startDispute(trip, $event)"
+                  title="Dispute these tolls"
+                  >Disputable</span
+                >
+              }
+              @if (trip.violation) {
+                <span
+                  class="violation-chip is-action"
+                  (click)="startViolation(trip, $event)"
+                  title="View HOV violation"
+                  >Violation</span
+                >
               }
             </span>
             @if (spansSingleDay(trip)) {

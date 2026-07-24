@@ -4,7 +4,7 @@ import { groupIntoTrips, replenishments } from './trip-grouping';
 function toll(overrides: Partial<TransactionView>): TransactionView {
   return {
     activityTypeName: 'Toll',
-    exitLocation: 'I-77 EL Exit 1',
+    exitLocation: 'Toll Plaza A',
     transactionDate: '2026-07-11T10:00:00',
     transactionDisplayDate: '',
     tagNumber: '03301285570',
@@ -12,13 +12,16 @@ function toll(overrides: Partial<TransactionView>): TransactionView {
     creditAmount: null,
     transactionType: 'Toll Charge',
     vehicleClass: '1',
-    roadGroup: 'i77-express',
+    roadGroup: 'road-a',
     disputable: false,
+    detailTransactionID: '',
+    hovViolation: false,
+    violationComments: '',
     ...overrides,
   };
 }
 
-const LABELS = new Map([['i77-express', 'I-77']]);
+const LABELS = new Map([['road-a', 'Road A']]);
 
 describe('groupIntoTrips', () => {
   it('groupIntoTrips_withTollsWithinFiveMinutes_returnsSingleTrip', () => {
@@ -31,8 +34,8 @@ describe('groupIntoTrips', () => {
     expect(trips.length).toBe(1);
     expect(trips[0].transactions.length).toBe(3);
     expect(trips[0].total).toBe(4.5);
-    expect(trips[0].roadGroup).toBe('i77-express');
-    expect(trips[0].roadGroupLabel).toBe('I-77');
+    expect(trips[0].roadGroup).toBe('road-a');
+    expect(trips[0].roadGroupLabel).toBe('Road A');
   });
 
   it('groupIntoTrips_withGapOverFiveMinutes_startsNewTrip', () => {
@@ -56,12 +59,12 @@ describe('groupIntoTrips', () => {
 
   it('groupIntoTrips_withDifferentRoadGroupsInWindow_splitsByGroup', () => {
     const txns = [
-      toll({ roadGroup: 'i77-express', transactionDate: '2026-07-11T10:00:00' }),
+      toll({ roadGroup: 'road-a', transactionDate: '2026-07-11T10:00:00' }),
       toll({ roadGroup: null, transactionDate: '2026-07-11T10:02:00' }),
     ];
     const trips = groupIntoTrips(txns, LABELS);
     expect(trips.length).toBe(2);
-    expect(trips.map((t) => t.roadGroupLabel).sort()).toEqual(['I-77', 'Other']);
+    expect(trips.map((t) => t.roadGroupLabel).sort()).toEqual(['Other', 'Road A']);
   });
 
   it('groupIntoTrips_withUnclassifiedTolls_labelsThemOther', () => {

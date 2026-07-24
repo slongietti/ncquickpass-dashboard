@@ -1,9 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DateTime } from 'luxon';
-import { NcqpService } from '../ncqp/ncqp.service';
+import { NcqpAccountClient } from '../ncqp/ncqp-account.client';
+import { NcqpHovClient } from '../ncqp/ncqp-hov.client';
+import { RoadGroupService } from '../../roads/road-group.service';
 import { DbClient } from '../../database/db-client';
 import { DeclarationSource, DeclarationStatus } from '../schedule/schedule.constants';
-import { NcqpDeclaration, NcqpVehicleTag } from '../../models/ncqp/ncqp.types';
+import { NcqpDeclaration } from '../../models/ncqp/NcqpDeclaration';
+import { NcqpVehicleTag } from '../../models/ncqp/NcqpVehicleTag';
 import { NcqpSession } from '../auth/session/session';
 import { ActivateDto } from '../../models/hov/ActivateDto';
 
@@ -33,12 +36,14 @@ export class HovService {
   private readonly logger = new Logger(HovService.name);
 
   constructor(
-    private readonly ncqp: NcqpService,
+    private readonly accountClient: NcqpAccountClient,
+    private readonly hovClient: NcqpHovClient,
     private readonly db: DbClient,
+    private readonly roads: RoadGroupService,
   ) {}
 
   async getVehicles(session: NcqpSession): Promise<VehicleView[]> {
-    const raw = await this.ncqp.getVehicles(session.token);
+    const raw = await this.accountClient.getVehicles(session.token);
     const seen = new Set<string>();
     const out: VehicleView[] = [];
     for (const v of raw) {
@@ -58,7 +63,7 @@ export class HovService {
   }
 
   async getStatus(session: NcqpSession): Promise<DeclarationView[]> {
-    const raw = await this.ncqp.getHovDeclarations(session.token, session.accountId);
+    const raw = await this.hovClient.getHovDeclarations(session.token, session.accountId);
     return raw.map((d) => HovService.toDeclarationView(d));
   }
 
@@ -71,10 +76,10 @@ export class HovService {
     const end = useCustom
       ? new Date(dto.endDateTime as string)
       : DateTime.fromJSDate(start, { zone: HOV_TIMEZONE }).endOf('day').toUTC().toJSDate();
-    const declarationId = await this.ncqp.activateHov(session.token, {
+    const declarationId = await this.hovClient.activateHov(session.token, {
       accountId: session.accountId,
       transponderNumber: dto.transponderNumber,
-      location: dto.location || 'I-77',
+      location: dto.location || this.roads.defaultHovLocation(),
       startDateTime: start.toISOString(),
       endDateTime: useCustom ? end.toISOString() : null,
       createdByUserId: session.userId,
@@ -85,7 +90,7 @@ export class HovService {
   }
 
   async cancel(session: NcqpSession, declarationId: string): Promise<{ result: string }> {
-    const result = await this.ncqp.cancelHov(session.token, declarationId, session.userId);
+    const result = await this.hovClient.cancelHov(session.token, declarationId, session.userId);
     // Best-effort ledger sync; the cancel at NCQP already succeeded.
     try {
       await this.db.hOVDeclaration.updateMany({

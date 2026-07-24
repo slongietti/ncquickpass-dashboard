@@ -8,10 +8,14 @@ import { HovService } from '../../core/services/hov.service';
 import { TransactionService } from '../../core/services/transaction.service';
 import { AccountService } from '../../core/services/account.service';
 import { RoadGroupService } from '../../core/services/road-group.service';
+import { CreateDispute, TollExceptionsService } from '../../core/services/toll-exceptions.service';
 import { AccountSummary } from '../../core/models/AccountSummary';
 import { DeclarationView } from '../../core/models/DeclarationView';
+import { Dispute } from '../../core/models/Dispute';
+import { DisputeReason } from '../../core/models/DisputeReason';
 import { RoadGroup } from '../../core/models/RoadGroup';
 import { TransactionView } from '../../core/models/TransactionView';
+import { Trip } from '../../core/models/Trip';
 import { VehicleView } from '../../core/models/VehicleView';
 import { groupIntoTrips, replenishments } from '../../core/trip-grouping';
 import { endOfDay } from '../../core/date-utils';
@@ -20,6 +24,9 @@ import { ActivateRequest, HovStatusComponent } from './components/hov-status/hov
 import { TripListComponent } from './components/trip-list/trip-list.component';
 import { AccountSummaryComponent } from './components/account-summary/account-summary.component';
 import { ScheduledDrawerComponent } from './components/scheduled-drawer/scheduled-drawer.component';
+import { TollExceptionsComponent } from './components/toll-exceptions/toll-exceptions.component';
+import { DisputeDrawerComponent } from './components/dispute-drawer/dispute-drawer.component';
+import { ViolationDrawerComponent } from './components/violation-drawer/violation-drawer.component';
 import { NcqpLogoComponent } from '../../shared/ncqp-logo/ncqp-logo.component';
 
 export interface RangeOption {
@@ -27,7 +34,7 @@ export interface RangeOption {
   days: number;
 }
 
-// "Forever" is modeled as ~10 years, which predates the I-77 Express Lanes.
+// "Forever" is modeled as ~10 years, comfortably before any toll history.
 const DAY_OPTIONS: RangeOption[] = [
   { label: 'Last 7 days', days: 7 },
   { label: 'Last 30 days', days: 30 },
@@ -46,6 +53,9 @@ const DAY_OPTIONS: RangeOption[] = [
     TripListComponent,
     AccountSummaryComponent,
     ScheduledDrawerComponent,
+    TollExceptionsComponent,
+    DisputeDrawerComponent,
+    ViolationDrawerComponent,
     NcqpLogoComponent,
   ],
   templateUrl: './dashboard.component.html',
@@ -57,6 +67,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private readonly transactionSvc = inject(TransactionService);
   private readonly accountSvc = inject(AccountService);
   private readonly roadGroupSvc = inject(RoadGroupService);
+  private readonly tollExceptionsSvc = inject(TollExceptionsService);
   private readonly router = inject(Router);
 
   /** Auto-dismiss timer for the action toast. */
@@ -77,6 +88,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly trips = computed(() => groupIntoTrips(this.transactions(), this.roadGroupLabels()));
   readonly replenishments = computed(() => replenishments(this.transactions()));
 
+  readonly disputes = signal<Dispute[]>([]);
+  readonly reasons = signal<DisputeReason[]>([]);
+  readonly disputesLoading = signal(true);
+  readonly disputeTrip = signal<Trip | null>(null);
+  readonly disputeBusy = signal(false);
+  readonly violationTrip = signal<Trip | null>(null);
+
   readonly days = signal(90);
   readonly loading = signal(true);
   readonly txLoading = signal(false);
@@ -94,6 +112,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadAll();
     this.refreshFuture();
+    this.loadDisputes();
   }
 
   ngOnDestroy(): void {
@@ -268,6 +287,64 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.hov.getFutureDeclarations().subscribe({
       next: (list) => this.futureDeclarations.set(list),
       error: () => this.futureDeclarations.set([]),
+    });
+  }
+
+  openDispute(trip: Trip): void {
+    this.disputeTrip.set(trip);
+  }
+
+  closeDispute(): void {
+    this.disputeTrip.set(null);
+  }
+
+  openViolation(trip: Trip): void {
+    this.violationTrip.set(trip);
+  }
+
+  closeViolation(): void {
+    this.violationTrip.set(null);
+  }
+
+  onSubmitDispute(payload: CreateDispute): void {
+    this.disputeBusy.set(true);
+    this.tollExceptionsSvc.createDispute(payload).subscribe({
+      next: (res) => {
+        this.disputeBusy.set(false);
+        this.disputeTrip.set(null);
+        this.notify(`Dispute filed. Case ${res.caseNumber}.`);
+        this.refreshDisputes();
+      },
+      error: (err) => {
+        this.disputeBusy.set(false);
+        this.handleActionError(err, 'Failed to file your dispute. Please try again.');
+      },
+    });
+  }
+
+  /**
+   * Load disputes + reasons on their own so the (slower) correspondence fetch never
+   * blocks the rest of the dashboard; the card shows a skeleton until they arrive.
+   */
+  loadDisputes(): void {
+    this.disputesLoading.set(true);
+    forkJoin({
+      disputes: this.tollExceptionsSvc.getDisputes(),
+      reasons: this.tollExceptionsSvc.getReasons(),
+    }).subscribe({
+      next: (res) => {
+        this.disputes.set(res.disputes);
+        this.reasons.set(res.reasons);
+        this.disputesLoading.set(false);
+      },
+      error: () => this.disputesLoading.set(false),
+    });
+  }
+
+  private refreshDisputes(): void {
+    this.tollExceptionsSvc.getDisputes().subscribe({
+      next: (list) => this.disputes.set(list),
+      error: () => {},
     });
   }
 

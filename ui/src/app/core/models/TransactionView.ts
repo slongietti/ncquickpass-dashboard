@@ -12,4 +12,10 @@ export interface TransactionView {
   roadGroup: string | null;
   /** A paid HOV-eligible toll that fell inside a recorded HOV declaration window. */
   disputable: boolean;
+  /** Ledger id for this row; the key needed to attach it to a dispute. */
+  detailTransactionID: string;
+  /** True when this toll was charged as an HOV occupancy violation. */
+  hovViolation: boolean;
+  /** Agency comment on the violation, when present. */
+  violationComments: string;
 }

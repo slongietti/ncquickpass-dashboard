@@ -1,6 +1,8 @@
 import { HovService } from '../../../src/endpoints/hov/hov.service';
 import { DbClient } from '../../../src/database/db-client';
-import { NcqpService } from '../../../src/endpoints/ncqp/ncqp.service';
+import { NcqpAccountClient } from '../../../src/endpoints/ncqp/ncqp-account.client';
+import { NcqpHovClient } from '../../../src/endpoints/ncqp/ncqp-hov.client';
+import { RoadGroupService } from '../../../src/roads/road-group.service';
 import { NcqpSession } from '../../../src/endpoints/auth/session/session';
 import {
   DeclarationSource,
@@ -23,15 +25,19 @@ function makeMocks() {
       updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
   };
-  const ncqp = {
+  const accountClient = { getVehicles: jest.fn().mockResolvedValue([]) };
+  const hov = {
     activateHov: jest.fn().mockResolvedValue(111),
     cancelHov: jest.fn().mockResolvedValue('Canceled'),
   };
+  const roads = { defaultHovLocation: jest.fn().mockReturnValue('Road A') };
   const service = new HovService(
-    ncqp as unknown as NcqpService,
+    accountClient as unknown as NcqpAccountClient,
+    hov as unknown as NcqpHovClient,
     db as unknown as DbClient,
+    roads as unknown as RoadGroupService,
   );
-  return { db, ncqp, service };
+  return { db, hov, service };
 }
 
 describe('HovService.activate', () => {
@@ -39,7 +45,7 @@ describe('HovService.activate', () => {
   afterAll(() => jest.useRealTimers());
 
   it('activate_customEnd_recordsAdhocDeclarationWithThatEnd', async () => {
-    const { ncqp, db, service } = makeMocks();
+    const { hov, db, service } = makeMocks();
     const end = '2026-07-15T20:30:00Z';
     const result = await service.activate(SESSION, {
       transponderNumber: 'TAG1',
@@ -47,7 +53,7 @@ describe('HovService.activate', () => {
     });
 
     expect(result).toEqual({ declarationId: 111 });
-    expect(ncqp.activateHov).toHaveBeenCalledWith(
+    expect(hov.activateHov).toHaveBeenCalledWith(
       't',
       expect.objectContaining({
         option: 'DateInTheFuture',
@@ -71,10 +77,10 @@ describe('HovService.activate', () => {
   });
 
   it('activate_noEnd_recordsRestOfTodayAsEasternEndOfDay', async () => {
-    const { ncqp, db, service } = makeMocks();
+    const { hov, db, service } = makeMocks();
     await service.activate(SESSION, { transponderNumber: 'TAG1' });
 
-    expect(ncqp.activateHov).toHaveBeenCalledWith(
+    expect(hov.activateHov).toHaveBeenCalledWith(
       't',
       expect.objectContaining({ option: 'RestOfToday', endDateTime: null }),
     );
@@ -107,10 +113,10 @@ describe('HovService.activate', () => {
 
 describe('HovService.cancel', () => {
   it('cancel_matchingNcqpId_marksRecordedRowCanceled', async () => {
-    const { ncqp, db, service } = makeMocks();
+    const { hov, db, service } = makeMocks();
     const result = await service.cancel(SESSION, '999');
 
-    expect(ncqp.cancelHov).toHaveBeenCalledWith('t', '999', 'u');
+    expect(hov.cancelHov).toHaveBeenCalledWith('t', '999', 'u');
     expect(db.hOVDeclaration.updateMany).toHaveBeenCalledWith({
       where: {
         accountId: 'ACC',

@@ -1,0 +1,340 @@
+:host {
+  display: block;
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.section-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+
+  .section-title {
+    margin: 0;
+  }
+}
+.section-head .range {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.section + .section {
+  border-top: 1px solid var(--border);
+  padding-top: 0.85rem;
+}
+
+.rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  cursor: pointer;
+  text-align: left;
+  color: var(--text);
+  font: inherit;
+
+  &:hover {
+    border-color: var(--accent);
+  }
+}
+.row-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.row-title {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.row-sub {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.row-end {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.row-total {
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.empty {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.badge-approved {
+  background: #e6f4ea;
+  color: #1e7e34;
+}
+.badge-denied {
+  background: #fdecea;
+  color: #b3261e;
+}
+.badge-pending {
+  background: #fdf3d3;
+  color: #8a6100;
+}
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.detail-notes {
+  margin: 0;
+  line-height: 1.5;
+  font-size: 0.9rem;
+  white-space: pre-line;
+
+  &.muted {
+    color: var(--muted);
+  }
+}
+
+.notes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.note {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.6rem 0.7rem;
+  background: var(--bg);
+}
+.note-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+.note-date {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.note-status {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: var(--accent-dim);
+  color: var(--accent-dark);
+}
+.note-text {
+  margin: 0;
+  line-height: 1.5;
+  font-size: 0.88rem;
+  white-space: pre-line;
+
+  /* ::ng-deep because the note is bound via [innerHTML]; injected spans don't
+     carry this component's encapsulation attribute, so a scoped rule can't reach them. */
+  ::ng-deep .hl {
+    font-weight: 700;
+    padding: 0 0.28rem;
+    border-radius: 6px;
+    background: var(--accent-dim);
+    color: var(--accent-dark);
+    white-space: nowrap;
+    text-decoration: none;
+  }
+  /* Long URLs must wrap inside the card, unlike the short date/currency chips. */
+  ::ng-deep a.hl {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  ::ng-deep a.hl:hover {
+    text-decoration: underline;
+  }
+}
+
+/* Loading placeholders for the disputes list. */
+.skeleton-row {
+  height: 2.5rem;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #eef0f2 25%, #e2e6ea 37%, #eef0f2 63%);
+  background-size: 400% 100%;
+  animation: skeleton 1.4s ease infinite;
+}
+@keyframes skeleton {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+.detail-txns {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.detail-txns-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.7rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.detail-txns-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+.detail-txns-total {
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+.txn-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.txn-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.85rem;
+
+  & + .txn-row {
+    border-top: 1px dashed var(--border);
+  }
+}
+.txn-row .txn-when {
+  color: var(--muted);
+  white-space: nowrap;
+}
+.txn-row .txn-amt {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.detail-image img {
+  cursor: zoom-in;
+}
+
+.lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.82);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+.lightbox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 95vw;
+  max-height: 95vh;
+
+  img {
+    max-width: 95vw;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 8px;
+    background: #fff;
+  }
+}
+.lightbox-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.6rem;
+}
+.lightbox-download {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+
+  &:hover {
+    background: var(--accent-dark);
+  }
+}
+/* Override the neutral ghost button so it's visible on the dark lightbox backdrop. */
+.lightbox-actions button {
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+}
+.detail-image {
+  margin: 0;
+
+  img {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  figcaption {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 0.3rem;
+  }
+}

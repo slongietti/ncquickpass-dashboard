@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { DbClient } from '../../database/db-client';
-import { NcqpService } from '../ncqp/ncqp.service';
+import { NcqpHovClient } from '../ncqp/ncqp-hov.client';
+import { RoadGroupService } from '../../roads/road-group.service';
 import { computeWindows, parseRanges, WindowDay } from './schedule-window';
 import { overlaps } from './conflict';
 import { DeclarationSource, DeclarationStatus } from './schedule.constants';
@@ -39,8 +40,6 @@ export interface ReconcileResult {
   canceled: number;
 }
 
-const HOV_LOCATION = 'I-77';
-
 /**
  * Reconciles a saved weekly schedule with real NCQP declarations: creates
  * future-dated declarations for windows that should exist and cancels ones the
@@ -54,7 +53,8 @@ export class MaterializationService {
 
   constructor(
     private readonly db: DbClient,
-    private readonly ncqp: NcqpService,
+    private readonly ncqp: NcqpHovClient,
+    private readonly roads: RoadGroupService,
   ) {}
 
   /** Reconcile every enabled schedule for the tenant. */
@@ -110,7 +110,7 @@ export class MaterializationService {
         const declarationId = await this.ncqp.activateHov(ctx.token, {
           accountId: ctx.accountId,
           transponderNumber: schedule.transponderNumber,
-          location: HOV_LOCATION,
+          location: this.roads.defaultHovLocation(),
           startDateTime: window.start.toISOString(),
           endDateTime: window.end.toISOString(),
           createdByUserId: ctx.userId,
@@ -184,7 +184,7 @@ export class MaterializationService {
     const declarationId = await this.ncqp.activateHov(ctx.token, {
       accountId: ctx.accountId,
       transponderNumber,
-      location: HOV_LOCATION,
+      location: this.roads.defaultHovLocation(),
       startDateTime: start.toISOString(),
       endDateTime: end.toISOString(),
       createdByUserId: ctx.userId,

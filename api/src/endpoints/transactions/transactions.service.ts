@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { NcqpService } from '../ncqp/ncqp.service';
+import { NcqpTransactionsClient } from '../ncqp/ncqp-transactions.client';
 import { DbClient } from '../../database/db-client';
 import { RoadGroupService } from '../../roads/road-group.service';
 import { DeclarationStatus } from '../schedule/schedule.constants';
-import { NcqpTransaction } from '../../models/ncqp/ncqp.types';
+import { NcqpTransaction } from '../../models/ncqp/NcqpTransaction';
 import { NcqpSession } from '../auth/session/session';
 
 /** Slim transaction shape returned to the SPA. */
@@ -21,6 +21,12 @@ export interface TransactionView {
   roadGroup: string | null;
   /** A paid HOV-eligible toll that fell inside a recorded HOV declaration window. */
   disputable: boolean;
+  /** Ledger id for this row; the key needed to attach it to a dispute. */
+  detailTransactionID: string;
+  /** True when this toll was charged as an HOV occupancy violation. */
+  hovViolation: boolean;
+  /** Agency comment on the violation, when present. */
+  violationComments: string;
 }
 
 /** A recorded declaration window as milliseconds, for point-in-window checks. */
@@ -40,7 +46,7 @@ function fmtDate(d: Date): string {
 @Injectable()
 export class TransactionsService {
   constructor(
-    private readonly ncqp: NcqpService,
+    private readonly ncqp: NcqpTransactionsClient,
     private readonly db: DbClient,
     private readonly roads: RoadGroupService,
   ) {}
@@ -137,6 +143,9 @@ export class TransactionsService {
       vehicleClass: t.class ?? '',
       roadGroup: this.roads.classify(exitLocation)?.id ?? null,
       disputable: false,
+      detailTransactionID: t.detailTransactionID ?? '',
+      hovViolation: !!t.hovViolation,
+      violationComments: t.violationComments ?? '',
     };
   }
 }

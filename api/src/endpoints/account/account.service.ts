@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { NcqpService } from '../ncqp/ncqp.service';
+import { NcqpAccountClient } from '../ncqp/ncqp-account.client';
 import { NcqpSession } from '../auth/session/session';
 
 export interface AccountSummary {
@@ -15,7 +15,7 @@ function fmtDate(d: Date): string {
 
 @Injectable()
 export class AccountService {
-  constructor(private readonly ncqp: NcqpService) {}
+  constructor(private readonly ncqp: NcqpAccountClient) {}
 
   /** Current account balance + status (the "stashed amount"). */
   async getSummary(session: NcqpSession): Promise<AccountSummary> {

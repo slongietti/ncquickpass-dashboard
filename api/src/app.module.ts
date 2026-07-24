@@ -11,6 +11,7 @@ import { AccountModule } from './endpoints/account/account.module';
 import { HovModule } from './endpoints/hov/hov.module';
 import { HovScheduleModule } from './endpoints/schedule/schedule.module';
 import { TransactionsModule } from './endpoints/transactions/transactions.module';
+import { TollExceptionsModule } from './endpoints/toll-exceptions/toll-exceptions.module';
 import { RoadGroupModule } from './roads/road-group.module';
 import { HealthController } from './health.controller';
 
@@ -35,6 +36,7 @@ const serveStatic = existsSync(clientPath)
     HovModule,
     HovScheduleModule,
     TransactionsModule,
+    TollExceptionsModule,
     RoadGroupModule,
   ],
   controllers: [HealthController],

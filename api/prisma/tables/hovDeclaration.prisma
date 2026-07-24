@@ -8,7 +8,7 @@ model HOVDeclaration {
   transponderNumber String
   windowStart       DateTime // concrete UTC window
   windowEnd         DateTime
-  ncqpDeclarationId String? // returned by NcqpService.activateHov
+  ncqpDeclarationId String? // returned by NcqpHovClient.activateHov
   status            String // materialized | canceled | superseded
   createdAt         DateTime @default(now())
 

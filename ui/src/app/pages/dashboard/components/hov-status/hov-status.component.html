@@ -166,7 +166,11 @@
           }
         </span>
       </label>
-      <button class="btn-primary" (click)="onSetEnd(t)" [disabled]="busyTransponder === t">
+      <button
+        class="btn-primary"
+        (click)="onSetEnd(t)"
+        [disabled]="busyTransponder === t || !endInputs[t]"
+      >
         Confirm
       </button>
     </div>

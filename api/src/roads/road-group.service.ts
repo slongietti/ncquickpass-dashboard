@@ -5,7 +5,7 @@ import { DbClient } from '../database/db-client';
 export interface RoadGroup {
   /** Stable slug, safe to reference from the UI or persist. */
   id: string;
-  /** Human-readable label, e.g. "I-77". */
+  /** Human-readable label for the group. */
   label: string;
   /** Case-insensitive substrings that identify this group in an exit-location string. */
   keywords: string[];
@@ -57,5 +57,15 @@ export class RoadGroupService implements OnModuleInit {
   /** True when a toll on this location could have been declared HOV. */
   isHovEligible(exitLocation: string | null | undefined): boolean {
     return this.classify(exitLocation)?.hovEligible ?? false;
+  }
+
+  /** The road groups that permit HOV declarations, in configured order. */
+  hovGroups(): RoadGroup[] {
+    return this.cache.filter((g) => g.hovEligible);
+  }
+
+  /** Location for a new HOV declaration: the first HOV-eligible group's label. */
+  defaultHovLocation(): string {
+    return this.hovGroups()[0]?.label ?? '';
   }
 }

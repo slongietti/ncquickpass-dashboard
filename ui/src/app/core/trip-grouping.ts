@@ -25,6 +25,7 @@ function makeTrip(
     roadGroup,
     roadGroupLabel: labelFor(roadGroup),
     disputable: transactions.some((t) => t.disputable),
+    violation: transactions.some((t) => t.hovViolation),
     transactions,
   };
 }

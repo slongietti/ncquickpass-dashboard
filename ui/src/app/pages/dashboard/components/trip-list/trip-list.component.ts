@@ -22,6 +22,13 @@ export class TripListComponent {
   @Input() dayOptions: RangeOption[] = [];
   @Input() loading = false;
   @Output() daysChange = new EventEmitter<number>();
+  /** Emits the trip whose tolls the user wants to dispute. */
+  @Output() openDispute = new EventEmitter<Trip>();
+  /** Emits the trip whose HOV violation the user wants to view. */
+  @Output() openViolation = new EventEmitter<Trip>();
+
+  /** Whether the list is in "pick a trip to dispute" mode. */
+  picking = false;
 
   get rangeOptions(): SelectOption[] {
     return this.dayOptions.map((o) => ({ label: o.label, value: o.days }));
@@ -32,6 +39,9 @@ export class TripListComponent {
 
   /** When on, only disputable trips are shown (independent of the road-group filter). */
   disputableOnly = false;
+
+  /** When on, only trips with an HOV violation are shown. */
+  violationOnly = false;
 
   /** Explains what the Disputable filter means (shown on hover). */
   readonly disputableHint =
@@ -53,11 +63,20 @@ export class TripListComponent {
     return this.trips.filter((t) => t.disputable).length;
   }
 
+  get hasViolation(): boolean {
+    return this.trips.some((t) => t.violation);
+  }
+
+  get violationCount(): number {
+    return this.trips.filter((t) => t.violation).length;
+  }
+
   get visibleTrips(): Trip[] {
     return this.trips.filter(
       (t) =>
         (this.selectedGroup === 'all' || t.roadGroupLabel === this.selectedGroup) &&
-        (!this.disputableOnly || t.disputable),
+        (!this.disputableOnly || t.disputable) &&
+        (!this.violationOnly || t.violation),
     );
   }
 
@@ -66,7 +85,7 @@ export class TripListComponent {
     return this.visibleTrips.reduce((sum, t) => sum + t.total, 0);
   }
 
-  /** A $0 toll/trip (e.g. an HOV-declared I-77 trip) is shown as "No Cost". */
+  /** A $0 toll/trip (e.g. an HOV-declared trip) is shown as "No Cost". */
   isNoCost(amount: number | null | undefined): boolean {
     return !amount;
   }
@@ -79,6 +98,33 @@ export class TripListComponent {
   toggleDisputable(): void {
     this.disputableOnly = !this.disputableOnly;
     this.expanded.clear();
+  }
+
+  toggleViolation(): void {
+    this.violationOnly = !this.violationOnly;
+    this.expanded.clear();
+  }
+
+  /** Violation-chip shortcut: open the violation view for this trip. */
+  startViolation(trip: Trip, event: Event): void {
+    event.stopPropagation();
+    this.openViolation.emit(trip);
+  }
+
+  togglePicking(): void {
+    this.picking = !this.picking;
+  }
+
+  /** In picking mode, clicking a trip starts a dispute for it. */
+  pick(trip: Trip): void {
+    this.openDispute.emit(trip);
+    this.picking = false;
+  }
+
+  /** Disputable-chip shortcut: dispute this trip without entering picking mode. */
+  startDispute(trip: Trip, event: Event): void {
+    event.stopPropagation();
+    this.openDispute.emit(trip);
   }
 
   toggle(index: number): void {

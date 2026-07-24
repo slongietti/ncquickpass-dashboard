@@ -1,8 +1,13 @@
 import { Module } from '@nestjs/common';
-import { NcqpService } from './ncqp.service';
+import { NcqpAccountClient } from './ncqp-account.client';
+import { NcqpCasesClient } from './ncqp-cases.client';
+import { NcqpHovClient } from './ncqp-hov.client';
+import { NcqpTransactionsClient } from './ncqp-transactions.client';
+
+const clients = [NcqpAccountClient, NcqpTransactionsClient, NcqpHovClient, NcqpCasesClient];
 
 @Module({
-  providers: [NcqpService],
-  exports: [NcqpService],
+  providers: clients,
+  exports: clients,
 })
 export class NcqpModule {}

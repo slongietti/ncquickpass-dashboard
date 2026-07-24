@@ -66,6 +66,14 @@
         [dayOptions]="dayOptions"
         [loading]="txLoading()"
         (daysChange)="changeDays($event)"
+        (openDispute)="openDispute($event)"
+        (openViolation)="openViolation($event)"
+      />
+
+      <app-toll-exceptions
+        [disputes]="disputes()"
+        [dayOptions]="dayOptions"
+        [loading]="disputesLoading()"
       />
     </div>
   }
@@ -80,3 +88,13 @@
   (saved)="onScheduleSaved($event)"
   (cancelUpcoming)="onCancelUpcoming($event)"
 />
+
+<app-dispute-drawer
+  [trip]="disputeTrip()"
+  [reasons]="reasons()"
+  [busy]="disputeBusy()"
+  (submitDispute)="onSubmitDispute($event)"
+  (close)="closeDispute()"
+/>
+
+<app-violation-drawer [trip]="violationTrip()" (close)="closeViolation()" />

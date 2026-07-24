@@ -1,6 +1,6 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
-import { NcqpService } from '../ncqp/ncqp.service';
-import { NcqpUserInfo } from '../../models/ncqp/ncqp.types';
+import { NcqpAccountClient } from '../ncqp/ncqp-account.client';
+import { NcqpUserInfo } from '../../models/ncqp/NcqpUserInfo';
 import { NcqpSession } from './session/session';
 
 function fmtDate(d: Date): string {
@@ -12,7 +12,7 @@ function fmtDate(d: Date): string {
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
-  constructor(private readonly ncqp: NcqpService) {}
+  constructor(private readonly ncqp: NcqpAccountClient) {}
 
   /** Exchange credentials for a session. Credentials are not retained. */
   async login(username: string, password: string): Promise<NcqpSession> {

@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { DbClient } from '../../database/db-client';
-import { NcqpService } from '../ncqp/ncqp.service';
+import { NcqpAccountClient } from '../ncqp/ncqp-account.client';
 import { AuthService } from '../auth/auth.service';
 import { CredentialVaultService } from './credential-vault.service';
 import { MaterializationService } from './materialization.service';
@@ -34,7 +34,7 @@ export class ScheduleCron {
 
   constructor(
     private readonly db: DbClient,
-    private readonly ncqp: NcqpService,
+    private readonly ncqp: NcqpAccountClient,
     private readonly vault: CredentialVaultService,
     private readonly materialization: MaterializationService,
     config: ConfigService,

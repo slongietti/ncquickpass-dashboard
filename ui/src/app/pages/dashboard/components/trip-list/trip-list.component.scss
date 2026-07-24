@@ -190,6 +190,64 @@
   color: #92400e;
   white-space: nowrap;
   vertical-align: middle;
+
+  &.is-action {
+    cursor: pointer;
+
+    &:hover {
+      background: #fde68a;
+    }
+  }
+}
+
+/* Violation filter chip + per-trip badge — red, distinct from the amber disputable. */
+.chip-violation {
+  border-color: #f0a9a9;
+  color: #b3261e;
+
+  &.active {
+    background: #b3261e;
+    border-color: #b3261e;
+    color: #fff;
+  }
+}
+.violation-chip {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: #fde8e8;
+  color: #b3261e;
+  white-space: nowrap;
+  vertical-align: middle;
+
+  &.is-action {
+    cursor: pointer;
+
+    &:hover {
+      background: #f9d5d5;
+    }
+  }
+}
+
+.btn-dispute {
+  margin-left: auto;
+  font-size: 0.78rem;
+  padding: 0.3rem 0.6rem;
+  white-space: nowrap;
+}
+
+.pick-hint {
+  margin: 0 0 0.6rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  color: var(--accent-dark);
+  background: var(--accent-dim);
+  flex: 0 0 auto;
 }
 
 .trips {
@@ -234,6 +292,9 @@
 
   &:hover {
     background: var(--surface);
+  }
+  &.pickable:hover {
+    background: var(--accent-dim);
   }
 }
 

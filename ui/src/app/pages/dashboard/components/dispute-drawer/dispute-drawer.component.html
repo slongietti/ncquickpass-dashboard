@@ -1,0 +1,54 @@
+<app-drawer
+  [open]="trip !== null"
+  [title]="'Dispute ' + (trip?.roadGroupLabel ?? '') + ' tolls'"
+  (close)="close.emit()"
+>
+  @if (trip) {
+    <div class="dispute-form">
+      <p class="intro">Choose the tolls to include, tell us why, and submit your dispute.</p>
+
+      <ul class="txns">
+        @for (txn of disputableTransactions; track txn.detailTransactionID) {
+          <li class="txn">
+            <label class="txn-check">
+              <input
+                type="checkbox"
+                [checked]="isSelected(txn.detailTransactionID)"
+                (change)="toggle(txn.detailTransactionID)"
+              />
+              <span class="txn-loc">{{ txn.exitLocation }}</span>
+            </label>
+            <span class="txn-when">{{ txn.transactionDate | date: 'MMM d, h:mm a' }}</span>
+            <span class="txn-amt">{{ txn.debitAmount | currency }}</span>
+          </li>
+        }
+      </ul>
+
+      <label class="field">
+        <span class="field-label">Reason</span>
+        <app-select
+          [options]="reasonOptions"
+          [value]="reasonId"
+          (valueChange)="reasonId = +$event"
+        />
+      </label>
+
+      <label class="field">
+        <span class="field-label">Comments</span>
+        <textarea
+          [(ngModel)]="comments"
+          rows="4"
+          maxlength="1000"
+          placeholder="Explain why these tolls should be disputed…"
+        ></textarea>
+      </label>
+
+      <div class="actions">
+        <button class="btn-ghost" type="button" (click)="close.emit()">Cancel</button>
+        <button class="btn-primary" type="button" [disabled]="!canSubmit" (click)="submit()">
+          {{ busy ? 'Submitting…' : 'Submit dispute (' + selectedIds.length + ')' }}
+        </button>
+      </div>
+    </div>
+  }
+</app-drawer>
