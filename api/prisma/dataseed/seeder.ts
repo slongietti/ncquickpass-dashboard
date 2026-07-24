@@ -5,10 +5,9 @@ import { DbClient } from '../../src/database/db-client';
 export const SEEDER = 'dataseed:seeder';
 
 /**
- * Seeds one table: a typed collection of records and how to upsert one. Generic
- * over the record type `T` so every implementation is type-checked against its
- * own records. Add a `<table>Seeder.ts` under `seeders/`, decorate the class with
- * `@Seeder()`, and list it in DataseedModule — the runner discovers it via DI.
+ * Seeds one table: a typed collection of records that the runner upserts. Add a
+ * `<table>Seeder.ts` under `seeders/` extending BaseSeeder, decorate it with
+ * `@Seeder()`, and list it in DataseedModule — the seeder is discovered via DI.
  */
 export interface ISeeder<T = unknown> {
   /** The records this seeder manages. */
@@ -17,7 +16,31 @@ export interface ISeeder<T = unknown> {
   upsert(db: DbClient, record: T): Promise<void>;
 }
 
-/** Marks an injectable class as an ISeeder so the runner can locate it via DI. */
+/** The slice of a Prisma model delegate a seeder needs (idempotent upsert). */
+export interface UpsertModel<TCreate, TWhere> {
+  upsert(args: { where: TWhere; create: TCreate; update: TCreate }): PromiseLike<unknown>;
+}
+
+/**
+ * Base seeder: implements the record→upsert once for every table. Subclasses only
+ * declare their `records`, the Prisma `model(db)` to write to, and the unique
+ * `whereOf(record)` selector. Create and update use the same record (idempotent).
+ */
+export abstract class BaseSeeder<TCreate, TWhere> implements ISeeder<TCreate> {
+  abstract readonly records: readonly TCreate[];
+
+  /** The Prisma delegate for this table, e.g. `db.roadGroup`. */
+  protected abstract model(db: DbClient): UpsertModel<TCreate, TWhere>;
+
+  /** The unique-where selector for a record, e.g. `{ id: record.id }`. */
+  protected abstract whereOf(record: TCreate): TWhere;
+
+  async upsert(db: DbClient, record: TCreate): Promise<void> {
+    await this.model(db).upsert({ where: this.whereOf(record), create: record, update: record });
+  }
+}
+
+/** Marks an injectable class as a seeder so the runner can locate it via DI. */
 export function Seeder(): ClassDecorator {
   return applyDecorators(Injectable(), SetMetadata(SEEDER, true));
 }
