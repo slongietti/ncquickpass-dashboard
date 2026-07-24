@@ -55,6 +55,8 @@ const CORRELATE_PRE_DAYS = 120;
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** Overall cap on GetCaseByTrxn lookups per disputes load. */
 const MAX_CASE_LOOKUPS = 120;
+/** GetCaseByTrxn lookups fired concurrently per batch. */
+const LOOKUP_BATCH = 10;
 /** A dispute matches a case only when their creation times are within this window. */
 const MATCH_TOLERANCE_MS = 5 * 60 * 1000;
 /** NC Quick Pass is Eastern; correspondence timestamps are local to this zone. */
@@ -128,31 +130,36 @@ export class TollExceptionsService {
       if (!closest(ms) && lookups < MAX_CASE_LOOKUPS) {
         const tolls = await this.tollsInWindow(session, ms - CORRELATE_PRE_DAYS * DAY_MS, ms + DAY_MS);
         for (const toll of tolls) tollById.set(toll.detailTransactionID as string, toll);
-        for (const toll of tolls) {
-          if (lookups >= MAX_CASE_LOOKUPS) break;
-          const id = toll.detailTransactionID as string;
-          if (lookedUp.has(id)) continue;
-          lookedUp.add(id);
-          lookups++;
-          const found = await this.cases.getCaseByTrxn(session.token, id);
-          const ids = (found?.caseInfos?.caseTabs?.[0]?.data ?? [])
-            .map((d) => d.detailTransactionID ?? '')
-            .filter((x) => x.length > 0);
-          if (ids.length === 0) continue;
-          ids.forEach((x) => lookedUp.add(x));
-          const transactions = ids
-            .map((x) => tollById.get(x))
-            .filter((r): r is NcqpTransaction => !!r)
-            .map((r) => ({
-              exitLocation: r.exitLocation ?? '',
-              transactionDate: r.transactionDate ?? '',
-              debitAmount: typeof r.debitAmount === 'number' ? r.debitAmount : 0,
-            }));
-          const total = Math.round(transactions.reduce((sum, t) => sum + t.debitAmount, 0) * 100) / 100;
-          const createdMs = Date.parse(found?.caseInfos?.createdDate ?? '');
-          cases.push({ createdMs, transactions, total });
-          // Found this dispute's case — stop scanning its window.
-          if (!Number.isNaN(createdMs) && Math.abs(createdMs - ms) <= MATCH_TOLERANCE_MS) break;
+        const ids = tolls.map((t) => t.detailTransactionID as string);
+        // Look up a batch of tolls concurrently, then stop once this dispute's case appears.
+        scan: for (let i = 0; i < ids.length && lookups < MAX_CASE_LOOKUPS; i += LOOKUP_BATCH) {
+          const batch = ids.slice(i, i + LOOKUP_BATCH).filter((id) => !lookedUp.has(id));
+          if (batch.length === 0) continue;
+          batch.forEach((id) => lookedUp.add(id));
+          lookups += batch.length;
+          const results = await Promise.all(
+            batch.map((id) => this.cases.getCaseByTrxn(session.token, id)),
+          );
+          for (const found of results) {
+            const memberIds = (found?.caseInfos?.caseTabs?.[0]?.data ?? [])
+              .map((d) => d.detailTransactionID ?? '')
+              .filter((x) => x.length > 0);
+            if (memberIds.length === 0) continue;
+            memberIds.forEach((x) => lookedUp.add(x));
+            const transactions = memberIds
+              .map((x) => tollById.get(x))
+              .filter((r): r is NcqpTransaction => !!r)
+              .map((r) => ({
+                exitLocation: r.exitLocation ?? '',
+                transactionDate: r.transactionDate ?? '',
+                debitAmount: typeof r.debitAmount === 'number' ? r.debitAmount : 0,
+              }));
+            const total =
+              Math.round(transactions.reduce((sum, t) => sum + t.debitAmount, 0) * 100) / 100;
+            const createdMs = Date.parse(found?.caseInfos?.createdDate ?? '');
+            cases.push({ createdMs, transactions, total });
+            if (!Number.isNaN(createdMs) && Math.abs(createdMs - ms) <= MATCH_TOLERANCE_MS) break scan;
+          }
         }
       }
       const match = closest(ms);
