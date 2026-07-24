@@ -126,7 +126,7 @@
                   <span class="note-status">{{ note.status }}</span>
                 }
               </div>
-              <p class="note-text" [innerHTML]="highlight(note.text)"></p>
+              <p class="note-text" [innerHTML]="highlight(note.text, dispute.caseNumber)"></p>
             </div>
           }
         </div>

@@ -45,12 +45,17 @@ export class TollExceptionsComponent {
   }
 
   /**
-   * Highlight currency amounts ($13.50) and dates (10/09/2024) in a note so they
-   * stand out like the status chip. The source text is already HTML-stripped; we
-   * re-escape then wrap matches, so the bound HTML is safe.
+   * Highlight the case number, currency amounts ($13.50) and dates (10/09/2024) in
+   * a note so they stand out like the status chip. The source text is already
+   * HTML-stripped; we re-escape then wrap matches, so the bound HTML is safe.
    */
-  highlight(text: string): SafeHtml {
-    const marked = TollExceptionsComponent.escapeHtml(text)
+  highlight(text: string, caseNumber?: string): SafeHtml {
+    let marked = TollExceptionsComponent.escapeHtml(text);
+    if (caseNumber) {
+      const escaped = caseNumber.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      marked = marked.replace(new RegExp(`\\b${escaped}\\b`, 'g'), (m) => `<span class="hl">${m}</span>`);
+    }
+    marked = marked
       .replace(/\$\d[\d,]*(?:\.\d{2})?/g, (m) => `<span class="hl">${m}</span>`)
       .replace(/\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/g, (m) => `<span class="hl">${m}</span>`);
     return this.sanitizer.bypassSecurityTrustHtml(marked);
