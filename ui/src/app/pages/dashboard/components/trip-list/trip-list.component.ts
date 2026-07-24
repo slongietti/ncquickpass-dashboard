@@ -71,7 +71,7 @@ export class TripListComponent {
     return this.visibleTrips.reduce((sum, t) => sum + t.total, 0);
   }
 
-  /** A $0 toll/trip (e.g. an HOV-declared I-77 trip) is shown as "No Cost". */
+  /** A $0 toll/trip (e.g. an HOV-declared trip) is shown as "No Cost". */
   isNoCost(amount: number | null | undefined): boolean {
     return !amount;
   }

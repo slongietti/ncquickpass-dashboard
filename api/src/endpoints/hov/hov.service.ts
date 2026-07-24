@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { DateTime } from 'luxon';
 import { NcqpAccountClient } from '../ncqp/ncqp-account.client';
 import { NcqpHovClient } from '../ncqp/ncqp-hov.client';
+import { RoadGroupService } from '../../roads/road-group.service';
 import { DbClient } from '../../database/db-client';
 import { DeclarationSource, DeclarationStatus } from '../schedule/schedule.constants';
 import { NcqpDeclaration } from '../../models/ncqp/NcqpDeclaration';
@@ -38,6 +39,7 @@ export class HovService {
     private readonly accountClient: NcqpAccountClient,
     private readonly hovClient: NcqpHovClient,
     private readonly db: DbClient,
+    private readonly roads: RoadGroupService,
   ) {}
 
   async getVehicles(session: NcqpSession): Promise<VehicleView[]> {
@@ -77,7 +79,7 @@ export class HovService {
     const declarationId = await this.hovClient.activateHov(session.token, {
       accountId: session.accountId,
       transponderNumber: dto.transponderNumber,
-      location: dto.location || 'I-77',
+      location: dto.location || this.roads.defaultHovLocation(),
       startDateTime: start.toISOString(),
       endDateTime: useCustom ? end.toISOString() : null,
       createdByUserId: session.userId,

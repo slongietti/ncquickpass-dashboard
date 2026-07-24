@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { NcqpModule } from '../ncqp/ncqp.module';
+import { RoadGroupModule } from '../../roads/road-group.module';
 import { AuthModule } from '../auth/auth.module';
 import { ScheduleController } from './schedule.controller';
 import { CronController } from './cron.controller';
@@ -14,7 +15,7 @@ import { ScheduleCron } from './schedule.cron';
  * comes from the global DatabaseModule; the NCQP clients from NcqpModule.
  */
 @Module({
-  imports: [NcqpModule, AuthModule],
+  imports: [NcqpModule, RoadGroupModule, AuthModule],
   controllers: [ScheduleController, CronController],
   providers: [ScheduleService, MaterializationService, CredentialVaultService, ScheduleCron],
 })

@@ -33,7 +33,7 @@ export interface RangeOption {
   days: number;
 }
 
-// "Forever" is modeled as ~10 years, which predates the I-77 Express Lanes.
+// "Forever" is modeled as ~10 years, comfortably before any toll history.
 const DAY_OPTIONS: RangeOption[] = [
   { label: 'Last 7 days', days: 7 },
   { label: 'Last 30 days', days: 30 },

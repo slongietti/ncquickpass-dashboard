@@ -2,6 +2,7 @@ import { HovService } from '../../../src/endpoints/hov/hov.service';
 import { DbClient } from '../../../src/database/db-client';
 import { NcqpAccountClient } from '../../../src/endpoints/ncqp/ncqp-account.client';
 import { NcqpHovClient } from '../../../src/endpoints/ncqp/ncqp-hov.client';
+import { RoadGroupService } from '../../../src/roads/road-group.service';
 import { NcqpSession } from '../../../src/endpoints/auth/session/session';
 import {
   DeclarationSource,
@@ -29,10 +30,12 @@ function makeMocks() {
     activateHov: jest.fn().mockResolvedValue(111),
     cancelHov: jest.fn().mockResolvedValue('Canceled'),
   };
+  const roads = { defaultHovLocation: jest.fn().mockReturnValue('Road A') };
   const service = new HovService(
     accountClient as unknown as NcqpAccountClient,
     hov as unknown as NcqpHovClient,
     db as unknown as DbClient,
+    roads as unknown as RoadGroupService,
   );
   return { db, hov, service };
 }

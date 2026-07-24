@@ -13,7 +13,7 @@ function makeMocks() {
   const cases = {
     getDisputeReasons: jest.fn().mockResolvedValue([
       { reasonID: 7, reason: 'IAG - MAXIMUM TOLL' },
-      { reasonID: 43, reason: 'I-77-HOV Declaration' },
+      { reasonID: 43, reason: 'HOV Declaration' },
       { reasonID: 38, reason: 'Exempt' },
       { reasonID: 22, reason: 'Duplicate' },
     ]),
@@ -39,7 +39,7 @@ describe('TollExceptionsService.getReasons', () => {
     const reasons = await service.getReasons(SESSION);
     // Curated order keeps 43 first; internal IAG reason (7) is dropped.
     expect(reasons).toEqual([
-      { reasonId: 43, label: 'I-77-HOV Declaration' },
+      { reasonId: 43, label: 'HOV Declaration' },
       { reasonId: 38, label: 'Exempt' },
       { reasonId: 22, label: 'Duplicate' },
     ]);
@@ -61,7 +61,7 @@ describe('TollExceptionsService.createDispute', () => {
         ticketNumber: '1707135',
         caseTypeId: 16,
         caseTopicId: 63,
-        caseTitle: 'I-77-HOV Declaration',
+        caseTitle: 'HOV Declaration',
         reasonID: 43,
         accountId: 'ACC',
         notes: 'Comments: HOV was active',

@@ -7,7 +7,7 @@ export interface Trip {
   total: number;
   /** Road group id these tolls belong to, or null when unclassified ("Other"). */
   roadGroup: string | null;
-  /** Display label for the road group ("I-77" or "Other"). */
+  /** Display label for the road group, or "Other" when unclassified. */
   roadGroupLabel: string;
   /** True when any toll in the trip is disputable (paid HOV toll in a declared window). */
   disputable: boolean;
