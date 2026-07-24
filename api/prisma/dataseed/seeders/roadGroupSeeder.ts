@@ -1,6 +1,7 @@
 import { DbClient } from '../../../src/database/db-client';
 import { Prisma } from '../../../src/generated/prisma/client';
-import { BaseSeeder, Seeder, UpsertModel } from '../seeder';
+import { BaseSeeder, UpsertModel } from '../baseSeeder';
+import { Seeder } from '../seeder';
 
 /**
  * Canonical road groups. Add a road or keyword to `records` and re-run
