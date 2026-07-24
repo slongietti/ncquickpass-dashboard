@@ -26,6 +26,7 @@ import { AccountSummaryComponent } from './components/account-summary/account-su
 import { ScheduledDrawerComponent } from './components/scheduled-drawer/scheduled-drawer.component';
 import { TollExceptionsComponent } from './components/toll-exceptions/toll-exceptions.component';
 import { DisputeDrawerComponent } from './components/dispute-drawer/dispute-drawer.component';
+import { ViolationDrawerComponent } from './components/violation-drawer/violation-drawer.component';
 import { NcqpLogoComponent } from '../../shared/ncqp-logo/ncqp-logo.component';
 
 export interface RangeOption {
@@ -54,6 +55,7 @@ const DAY_OPTIONS: RangeOption[] = [
     ScheduledDrawerComponent,
     TollExceptionsComponent,
     DisputeDrawerComponent,
+    ViolationDrawerComponent,
     NcqpLogoComponent,
   ],
   templateUrl: './dashboard.component.html',
@@ -89,9 +91,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   readonly disputes = signal<Dispute[]>([]);
   readonly reasons = signal<DisputeReason[]>([]);
   readonly disputesLoading = signal(true);
-  readonly violations = computed(() => this.transactions().filter((t) => t.hovViolation));
   readonly disputeTrip = signal<Trip | null>(null);
   readonly disputeBusy = signal(false);
+  readonly violationTrip = signal<Trip | null>(null);
 
   readonly days = signal(90);
   readonly loading = signal(true);
@@ -294,6 +296,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   closeDispute(): void {
     this.disputeTrip.set(null);
+  }
+
+  openViolation(trip: Trip): void {
+    this.violationTrip.set(trip);
+  }
+
+  closeViolation(): void {
+    this.violationTrip.set(null);
   }
 
   onSubmitDispute(payload: CreateDispute): void {

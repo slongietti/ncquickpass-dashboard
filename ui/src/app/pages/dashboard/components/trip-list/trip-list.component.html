@@ -50,6 +50,11 @@
         <span class="chip-tooltip" role="tooltip">{{ disputableHint }}</span>
       </button>
     }
+    @if (hasViolation) {
+      <button class="chip chip-violation" [class.active]="violationOnly" (click)="toggleViolation()">
+        Violation ({{ violationCount }})
+      </button>
+    }
     <button class="btn-ghost btn-dispute" type="button" (click)="togglePicking()">
       {{ picking ? 'Cancel' : 'Dispute' }}
     </button>
@@ -89,6 +94,14 @@
                   (click)="startDispute(trip, $event)"
                   title="Dispute these tolls"
                   >Disputable</span
+                >
+              }
+              @if (trip.violation) {
+                <span
+                  class="violation-chip is-action"
+                  (click)="startViolation(trip, $event)"
+                  title="View HOV violation"
+                  >Violation</span
                 >
               }
             </span>

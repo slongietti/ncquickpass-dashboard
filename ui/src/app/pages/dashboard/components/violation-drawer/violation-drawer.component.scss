@@ -1,0 +1,58 @@
+.violation-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.explain {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.v-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.v-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.55rem 0.7rem;
+  font-size: 0.88rem;
+
+  & + .v-row {
+    border-top: 1px dashed var(--border);
+  }
+}
+.v-when {
+  color: var(--muted);
+  white-space: nowrap;
+}
+.v-amt {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.v-comments {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.v-comments-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+.v-comment {
+  margin: 0.15rem 0 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}

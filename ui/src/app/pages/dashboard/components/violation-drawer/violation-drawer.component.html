@@ -1,0 +1,30 @@
+<app-drawer [open]="trip !== null" title="HOV violation" (close)="close.emit()">
+  @if (trip) {
+    <div class="violation-detail">
+      <p class="explain">
+        These tolls were charged as HOV occupancy violations — the HOV detection system
+        recorded fewer than three occupants while HOV status was active, so the trip was
+        billed the standard toll.
+      </p>
+
+      <ul class="v-list">
+        @for (violation of violations; track $index) {
+          <li class="v-row">
+            <span class="v-loc">{{ violation.exitLocation }}</span>
+            <span class="v-when">{{ violation.transactionDate | date: 'MMM d, y · h:mm a' }}</span>
+            <span class="v-amt">{{ violation.debitAmount | currency }}</span>
+          </li>
+        }
+      </ul>
+
+      @if (comments.length) {
+        <div class="v-comments">
+          <span class="v-comments-title">Agency comments</span>
+          @for (comment of comments; track $index) {
+            <p class="v-comment">{{ comment }}</p>
+          }
+        </div>
+      }
+    </div>
+  }
+</app-drawer>

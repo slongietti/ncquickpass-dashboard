@@ -16,6 +16,7 @@ function toll(overrides: Partial<TransactionView>): TransactionView {
     disputable: false,
     detailTransactionID: '',
     hovViolation: false,
+    violationComments: '',
     ...overrides,
   };
 }

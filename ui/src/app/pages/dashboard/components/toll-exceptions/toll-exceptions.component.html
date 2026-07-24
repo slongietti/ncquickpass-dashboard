@@ -1,8 +1,8 @@
 <section class="card">
   <header class="card-head">
     <div class="head-main">
-      <h2>Disputes / Violations</h2>
-      <p class="hint">Your filed disputes and HOV violations.</p>
+      <h2>Disputes</h2>
+      <p class="hint">Your filed disputes and their status.</p>
     </div>
   </header>
 
@@ -54,25 +54,7 @@
     }
   </div>
 
-  <div class="section">
-    <h3 class="section-title">HOV violations</h3>
-    @if (violations.length === 0) {
-      <p class="empty">No HOV violations.</p>
-    } @else {
-      <ul class="rows">
-        @for (violation of violations; track $index) {
-          <li class="violation">
-            <span class="row-main">
-              <span class="row-title">{{ violation.exitLocation }}</span>
-              <span class="row-sub">{{ violation.transactionDate | date: 'MMM d, y · h:mm a' }}</span>
-            </span>
-            <span class="v-amt">{{ violation.debitAmount | currency }}</span>
-          </li>
-        }
-      </ul>
-    }
-  </div>
-</section>
+  </section>
 
 <app-drawer
   [open]="selected() !== null"

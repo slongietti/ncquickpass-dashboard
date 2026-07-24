@@ -67,11 +67,11 @@
         [loading]="txLoading()"
         (daysChange)="changeDays($event)"
         (openDispute)="openDispute($event)"
+        (openViolation)="openViolation($event)"
       />
 
       <app-toll-exceptions
         [disputes]="disputes()"
-        [violations]="violations()"
         [dayOptions]="dayOptions"
         [loading]="disputesLoading()"
       />
@@ -96,3 +96,5 @@
   (submitDispute)="onSubmitDispute($event)"
   (close)="closeDispute()"
 />
+
+<app-violation-drawer [trip]="violationTrip()" (close)="closeViolation()" />

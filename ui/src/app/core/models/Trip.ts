@@ -11,5 +11,7 @@ export interface Trip {
   roadGroupLabel: string;
   /** True when any toll in the trip is disputable (paid HOV toll in a declared window). */
   disputable: boolean;
+  /** True when any toll in the trip was charged as an HOV occupancy violation. */
+  violation: boolean;
   transactions: TransactionView[];
 }

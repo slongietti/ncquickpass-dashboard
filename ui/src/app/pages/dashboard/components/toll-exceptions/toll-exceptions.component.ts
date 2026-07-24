@@ -2,7 +2,6 @@ import { Component, Input, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Dispute } from '../../../../core/models/Dispute';
-import { TransactionView } from '../../../../core/models/TransactionView';
 import { DrawerComponent } from '../../../../shared/drawer/drawer.component';
 import { SelectComponent, SelectOption } from '../../../../shared/select/select.component';
 import { TollExceptionsService } from '../../../../core/services/toll-exceptions.service';
@@ -23,7 +22,6 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 })
 export class TollExceptionsComponent {
   @Input() disputes: Dispute[] = [];
-  @Input() violations: TransactionView[] = [];
   @Input() dayOptions: RangeOption[] = [];
   @Input() loading = false;
 

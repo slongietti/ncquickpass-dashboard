@@ -16,4 +16,6 @@ export interface TransactionView {
   detailTransactionID: string;
   /** True when this toll was charged as an HOV occupancy violation. */
   hovViolation: boolean;
+  /** Agency comment on the violation, when present. */
+  violationComments: string;
 }
